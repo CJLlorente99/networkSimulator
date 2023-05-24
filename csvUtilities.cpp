@@ -25,6 +25,7 @@ int CSVReader::readNextLine(std::vector<bool> *inputs){
         }
     return 0;   
     }
+    return 0;
 }
 
 CSVWriter::CSVWriter(std::string filename, char delimiter){
