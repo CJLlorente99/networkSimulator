@@ -1,15 +1,34 @@
-./abcSynthesis ./data/plas/L0 ./data/aiger/L1
-./networkSimulatorAiger ./data/aiger/L1 ./data/inputs/trainInput ./data/simulatedOutputs/L1
-./createInputsFromSimulated ./data/simulatedOutputs/L1 ./data/inputSimulated/L0
+baseFolder=/media/carlos/disk
 
-./abcSynthesis ./data/plas/L1 ./data/aiger/L2
-./networkSimulatorAiger ./data/aiger/L2 ./data/inputSimulated/L0 ./data/simulatedOutputs/L2
-./createInputsFromSimulated ./data/simulatedOutputs/L2 ./data/inputSimulated/L1
+printf "DEALING WITH FIRST LAYER\n\n"
 
-./abcSynthesis ./data/plas/L2 ./data/aiger/L3
-./networkSimulatorAiger ./data/aiger/L3 ./data/inputSimulated/L1 ./data/simulatedOutputs/L3
-./createInputsFromSimulated ./data/simulatedOutputs/L3 ./data/inputSimulated/L2
+printf "Creating AIG files\n\n"
+./abcSynthesis $baseFolder/plas/L0 $baseFolder/aiger/L1
+printf "Simlating outputs\n\n"
+./networkSimulatorAiger $baseFolder/aiger/L1 $baseFolder/inputs/trainInput $baseFolder/simulatedOutputs/L1
+printf "Joining outputs for next layer inputs\n\n"
+./createInputsFromSimulated $baseFolder/simulatedOutputs/L1 $baseFolder/inputSimulated/L0
 
-./abcSynthesis ./data/plas/L3 ./data/aiger/L4
-./networkSimulatorAiger ./data/aiger/L4 ./data/inputSimulated/L2 ./data/simulatedOutputs/L4
-./createInputsFromSimulated ./data/simulatedOutputs/L4 ./data/inputSimulated/L3
+printf "DEALING WITH SECOND LAYER\n\n"
+
+./abcSynthesis $baseFolder/plas/L1 $baseFolder/aiger/L2
+printf "Simlating outputs\n\n"
+./networkSimulatorAiger $baseFolder/aiger/L2 $baseFolder/inputSimulated/L0 $baseFolder/simulatedOutputs/L2
+printf "Joining outputs for next layer inputs\n\n"
+./createInputsFromSimulated $baseFolder/simulatedOutputs/L2 $baseFolder/inputSimulated/L1
+
+printf "DEALING WITH THIRD LAYER\n\n"
+
+./abcSynthesis $baseFolder/plas/L2 $baseFolder/aiger/L3
+printf "Simlating outputs\n\n"
+./networkSimulatorAiger $baseFolder/aiger/L3 $baseFolder/inputSimulated/L1 $baseFolder/simulatedOutputs/L3
+printf "Joining outputs for next layer inputs\n\n"
+./createInputsFromSimulated $baseFolder/simulatedOutputs/L3 $baseFolder/inputSimulated/L2
+
+printf "DEALING WITH FOURTH LAYER\n\n"
+
+./abcSynthesis $baseFolder/plas/L3 $baseFolder/aiger/L4
+printf "Simlating outputs\n\n"
+./networkSimulatorAiger $baseFolder/aiger/L4 $baseFolder/inputSimulated/L2 $baseFolder/simulatedOutputs/L4
+printf "Joining outputs for next layer inputs\n\n"
+./createInputsFromSimulated $baseFolder/simulatedOutputs/L4 $baseFolder/inputSimulated/L3
