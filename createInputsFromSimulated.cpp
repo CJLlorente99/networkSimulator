@@ -10,8 +10,8 @@
 using namespace std;
 
 int main(int argc, char *argv[]){
-    // string simulatedOutputsFolder = "./data/simulatedOutputs";
-    // string outputFilename = "./data/inputSimulated/L0";
+    // string simulatedOutputsFolder = "/media/carlos/disk/simulatedOutputs/L1";
+    // string outputFilename = "/media/carlos/disk/inputSimulated/L0";
 
     string simulatedOutputsFolder = argv[1];
     string outputFilename = argv[2];
@@ -37,7 +37,7 @@ int main(int argc, char *argv[]){
         '\n');
 
     // Loop over the ordered files and stack each output
-    int matrix[numSims][simFiles.size()];
+    vector<vector<int>> matrix(numSims, vector<int>(simFiles.size()));
     string line;
     for ( int neuron = 0; neuron < simFiles.size(); neuron++ ){
         ifstream file(simFiles[neuron].c_str());
@@ -46,6 +46,8 @@ int main(int argc, char *argv[]){
             reverse(line.begin(), line.end());
             matrix[sim][neuron] = int(line[1]) - 48;
         }
+        // Delete simFile
+        remove(simFiles[neuron].c_str());
     }
     
     // Print the matrix into a file

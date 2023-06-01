@@ -99,6 +99,9 @@ int main(int argc, char** argv){
         }
         string msg = to_string(++i) + " / " + to_string(plaFiles.size()); 
         cout << msg << endl;
+
+        // Remove PLA file
+        remove(filename);
     }
     // End framework
     Abc_Stop();

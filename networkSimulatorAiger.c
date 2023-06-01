@@ -66,6 +66,9 @@ int main(int argc, char** argv){
                 dup2(save_out, fileno(stdout));
 
                 close(save_out);
+
+                // Delete the AIG file
+                remove(aigerFilename);
             }
         }
         closedir(d);
