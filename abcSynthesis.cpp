@@ -19,7 +19,7 @@ using namespace std;
 
 int main(int argc, char** argv){
     /* Parse arguments */
-    bool optimize = false;
+    bool optimize = true;
     string folderName = "data/plas";
     string outFolderName = "data/x";
 
@@ -47,6 +47,14 @@ int main(int argc, char** argv){
     // Start framework
     Abc_Start();
     pAbc = Abc_FrameGetGlobalFrame();
+
+    // Load aliases file
+    sprintf(command, "source abc.rc");
+    cout << command << endl;
+    if ( Cmd_CommandExecute(pAbc, command) ) {
+        fprintf(stdout, "Error loading alias file %s\n", command);
+        return 1;
+    }
 
     // Iterate through all the PLA files
     int i = 0;

@@ -4,3 +4,7 @@ example
 abcSynthesis
 createInputsFromSimulated
 networkSimulatorAiger
+abcExe
+exe.rc
+abcSynthesis
+abc.rc
