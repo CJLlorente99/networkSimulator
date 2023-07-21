@@ -14,7 +14,7 @@ char *strremove(char *str, const char *sub);
 int main(int argc, char** argv){
     // Parse arguments
     char* aigerFolder = argv[1];
-    char* inputFilename = argv[2];
+    char* inputFolder = argv[2];
     char* outputFolder = argv[3];
 
     // Loop over all the files in the aiger folder
@@ -49,10 +49,12 @@ int main(int argc, char** argv){
                 int save_out = dup(fileno(stdout));
 
                 if ( dup2(out, fileno(stdout)) == -1 )
-                    return 1;
+                    return 1;                
 
                 // Simulate all inputs
                 char command[1024];
+                char inputFilename[1024];
+                sprintf(inputFilename, "%s/%s", inputFolder, strremove(dir->d_name, ".aig"));
                 sprintf(command, "./include/aiger/aigsim %s %s", aigerFilename, inputFilename);
                 system(command);
 
