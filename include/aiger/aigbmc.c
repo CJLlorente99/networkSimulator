@@ -1,5 +1,5 @@
 /***************************************************************************
-Copyright (c) 2011, Armin Biere, Johannes Kepler University, Austria.
+Copyright (c) 2011-2014, Armin Biere, Johannes Kepler University, Austria.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to
@@ -21,7 +21,14 @@ IN THE SOFTWARE.
 ***************************************************************************/
 
 #include "aiger.h"
+
+#ifdef AIGER_HAVE_PICOSAT
 #include "../picosat/picosat.h"
+#endif
+
+#ifdef AIGER_HAVE_LINGELING
+#include "../lingeling/lglib.h"
+#endif
 
 #include <assert.h>
 #include <ctype.h>
@@ -30,9 +37,13 @@ IN THE SOFTWARE.
 #include <stdio.h>
 #include <string.h>
 
-static const char * name;
 static aiger * model;
+static const char * name;
 static unsigned firstlatchidx, firstandidx;
+
+#ifdef AIGER_HAVE_PICOSAT
+static PicoSAT * picosat;
+#endif
 
 typedef struct Latch { int lit, next; } Latch;
 typedef struct Fairness { int lit, sat; } Fairness;
@@ -53,9 +64,21 @@ typedef struct State {
 static State * states;
 static int nstates, szstates, * join;
 static char * bad, * justice;
+static int props, reached;
 
-static int verbose, move;
+static int verbose, move, quiet, nowitness;
 static int nvars;
+
+#ifdef AIGER_HAVE_LINGELING
+static int maxvar;
+static int uselingeling;
+static LGL * lgl;
+#endif
+
+#ifdef AIGER_HAVE_PICOSAT
+static int usepicosat;
+static PicoSAT * picosat;
+#endif
 
 static void die (const char *fmt, ...) {
   va_list ap;
@@ -70,35 +93,114 @@ static void die (const char *fmt, ...) {
 
 static void msg (int level, const char *fmt, ...) {
   va_list ap;
-  if (verbose < level) return;
-  fputs ("[aigbmc] ", stderr);
+  if (quiet || verbose < level) return;
+  fputs ("c [aigbmc] ", stdout);
   va_start (ap, fmt);
-  vfprintf (stderr, fmt, ap);
+  vfprintf (stdout, fmt, ap);
   va_end (ap);
-  fputc ('\n', stderr);
-  fflush (stderr);
+  fputc ('\n', stdout);
+  fflush (stdout);
 }
 
 static void wrn (const char *fmt, ...) {
   va_list ap;
-  fputs ("[aigbmc] WARNING ", stderr);
+  fputs ("c [aigbmc] WARNING ", stdout);
   va_start (ap, fmt);
-  vfprintf (stderr, fmt, ap);
+  vfprintf (stdout, fmt, ap);
   va_end (ap);
-  fputc ('\n', stderr);
-  fflush (stderr);
+  fputc ('\n', stdout);
+  fflush (stdout);
 }
 
-static void add (int lit) { picosat_add (lit); }
+static void add (int lit) { 
+#ifdef AIGER_HAVE_LINGELING
+  if (uselingeling) { 
+    while (maxvar < abs (lit)) lglfreeze (lgl, ++maxvar);
+    lgladd (lgl, lit);
+    return;
+  }
+#endif
+#ifdef AIGER_HAVE_PICOSAT
+  assert (usepicosat);
+  picosat_add (picosat, lit);
+#endif
+}
 
-static void assume (int lit) { picosat_assume (lit); }
+static void assume (int lit) {
+#ifdef AIGER_HAVE_LINGELING
+  if (uselingeling) { lglassume (lgl, lit); return; }
+#endif
+#ifdef AIGER_HAVE_PICOSAT
+  assert (usepicosat);
+  picosat_assume (picosat, lit);
+#endif
+}
 
-static int sat () { return picosat_sat (-1); }
+static int sat () {
+#ifdef AIGER_HAVE_LINGELING
+  if (uselingeling) {
+    LGL * clone;
+    int res;
+    lglsetopt (lgl, "simpdelay", 10);
+    lglsetopt (lgl, "clim", 100);
+    res = lglsat (lgl);
+    if (res) return res;
+    clone = lglclone (lgl);
+    lglsetprefix (clone, "c [lingeling.clone] ");
+    lglfixate (clone);
+    lglmeltall (clone);
+    res = lglsimp (clone, 0);
+    if (!res) {
+      lglsetopt (clone, "clim", -1);
+      res = lglsat (clone);
+      assert (res);
+    }
+#ifndef NDEBUG
+    int cres =
+#endif
+    lglunclone (lgl, clone);
+    assert (cres == res);
+    lglrelease (clone);
+    return res;
+  }
+#endif
+#ifdef AIGER_HAVE_PICOSAT
+  assert (usepicosat);
+  return picosat_sat (picosat, -1);
+#endif
+}
 
-static int deref (int lit) { return picosat_deref (lit); }
+static int deref (int lit) {
+#ifdef AIGER_HAVE_LINGELING
+  if (uselingeling) return lglderef (lgl, lit);
+#endif
+#ifdef AIGER_HAVE_PICOSAT
+  assert (usepicosat);
+  return picosat_deref (picosat, lit);
+#endif
+}
 
 static void init () {
-  picosat_init ();
+#ifdef AIGER_HAVE_LINGELING
+  if (uselingeling) {
+    lgl = lglinit ();
+    msg (1, "initialized Lingeling");
+    if (verbose > 1) {
+      lglsetopt (lgl, "verbose", verbose - 1);
+      lglsetprefix (lgl, "c [lingeling] ");
+    }
+  }
+#endif
+#ifdef AIGER_HAVE_PICOSAT
+  if (usepicosat) {
+    picosat = picosat_init ();
+    msg (1, "initialized PicoSAT");
+    if (verbose > 1) {
+      picosat_set_verbosity (picosat, verbose - 1);
+      picosat_set_prefix (picosat, "c [picosat] ");
+    }
+  }
+#endif
   model = aiger_init ();
 }
 
@@ -120,7 +222,18 @@ static void reset () {
   free (bad);
   free (justice);
   free (join);
-  picosat_reset ();
+#ifdef AIGER_HAVE_LINGELING
+  if (uselingeling) {
+    if (verbose > 1) lglstats (lgl);
+    lglrelease (lgl);
+  }
+#endif
+#ifdef AIGER_HAVE_PICOSAT
+  if (usepicosat) {
+    if (verbose > 1) picosat_stats (picosat);
+    picosat_reset (picosat);
+  }
+#endif
   aiger_reset (model);
 }
 
@@ -213,7 +326,7 @@ static int encode () {
   if (model->num_bad) {
     res->bad = malloc (model->num_bad * sizeof *res->bad);
     for (i = 0; i < model->num_bad; i++)
-      res->bad[i] = import (res, model->bad[i].lit);
+      res->bad[i] = bad[i] ? -1 : import (res, model->bad[i].lit);
     if (model->num_bad > 1) {
       res->onebad = newvar ();
       add (-res->onebad);
@@ -259,20 +372,23 @@ static int encode () {
     }
 
     for (i = 0; i < model->num_justice; i++) {
-      for (j = 0; j < model->justice[i].size; j++) {
-	res->justice[i].lits[j].sat = newvar ();
-	add (-res->justice[i].lits[j].sat);
-	if (time) add (prev->justice[i].lits[j].sat);
-	add (res->justice[i].lits[j].lit);
-	add (0);
-	add (-res->justice[i].lits[j].sat);
-	if (time) add (prev->justice[i].lits[j].sat);
-	add (res->loop);
-	add (0);
+      if (justice[i]) res->justice[i].sat = -1;
+      else {
+	for (j = 0; j < model->justice[i].size; j++) {
+	  res->justice[i].lits[j].sat = newvar ();
+	  add (-res->justice[i].lits[j].sat);
+	  if (time) add (prev->justice[i].lits[j].sat);
+	  add (res->justice[i].lits[j].lit);
+	  add (0);
+	  add (-res->justice[i].lits[j].sat);
+	  if (time) add (prev->justice[i].lits[j].sat);
+	  add (res->loop);
+	  add (0);
+	}
+	res->justice[i].sat = newvar ();
+	for (j = 0; j < model->justice[i].size; j++)
+	  binary (-res->justice[i].sat, res->justice[i].lits[j].sat);
       }
-      res->justice[i].sat = newvar ();
-      for (j = 0; j < model->justice[i].size; j++)
-	binary (-res->justice[i].sat, res->justice[i].lits[j].sat);
     }
     if (model->num_justice > 1) {
       res->onejustified = newvar ();
@@ -324,7 +440,25 @@ static int isnum (const char * str) {
 }
 
 static const char * usage =
-"usage: aigbmc [-h][-v][-m][<model>][<maxk>]\n";
+"usage: aigbmc [-h][-v][-m][-n][<model>][<maxk>]\n"
+"\n"
+"-h  print this command line option summary\n"
+"-v  increase verbose level\n"
+"-m  use outputs as bad state constraint\n"
+"-n  do not print witness\n"
+"-q  be quite (impies '-n')\n"
+"\n"
+#if defined(AIGER_HAVE_PICOSAT) && defined(AIGER_HAVE_LINGELING)
+"--lingeling   use Lingeling as SAT solver (default)\n"
+"--picosat     use PicoSAT as SAT solver\n"
+#elif defined(AIGER_HAVE_LINGELING)
+"Using Lingeling as SAT solver back-end.\n"
+#elif defined(AIGER_HAVE_PICOSAT)
+"Using PicoSAT as SAT solver back-end.\n"
+#else
+#error "no SAT solver defined"
+#endif
+;
 
 static void print (int lit) {
   int val = deref (lit), ch;
@@ -337,15 +471,28 @@ static void print (int lit) {
 static void nl () { putc ('\n', stdout); }
 
 int main (int argc, char ** argv) {
-  int i, j, k, maxk, lit, found;
+  int i, j, k, maxk, lit;
   const char * err;
   maxk = -1;
+#ifdef AIGER_HAVE_LINGELING
+  uselingeling = 1;
+#else
+  usepicosat = 1;
+#endif
   for (i = 1; i < argc; i++) {
     if (!strcmp (argv[i], "-h")) {
       printf ("%s", usage);
       exit (0);
     } else if (!strcmp (argv[i], "-v")) verbose++;
     else if (!strcmp (argv[i], "-m")) move = 1;
+    else if (!strcmp (argv[i], "-n")) nowitness = 1;
+    else if (!strcmp (argv[i], "-q")) quiet = 1;
+#if defined(AIGER_HAVE_LINGELING) && defined(AIGER_HAVE_PICOSAT)
+    else if (!strcmp (argv[i], "--lingeling"))
+      uselingeling = 1, usepicosat = 0;
+    else if (!strcmp (argv[i], "--picosat"))
+      usepicosat = 1, uselingeling = 0;
+#endif
     else if (argv[i][0] == '-')
       die ("invalid command line option '%s'", argv[i]);
     else if (name && maxk >= 0) 
@@ -375,10 +522,18 @@ int main (int argc, char ** argv) {
   if (!model->num_justice && model->num_fairness)
     wrn ("%u fairness constraints but no justice properties",
          model->num_fairness);
-  if (move && !model->num_bad && !model->num_justice && model->num_outputs) {
-    wrn ("using %u outputs as bad properties", model->num_outputs);
-    for (i = 0; i < model->num_outputs; i++)
-      aiger_add_bad (model, model->outputs[i].lit, 0);
+  if (move) { 
+    if (model->num_bad)
+      wrn ("will not move outputs if bad state properties exists");
+    else if (model->num_constraints)
+      wrn ("will not move outputs if environment constraints exists");
+    else if (!model->outputs)
+      wrn ("no outputs to move");
+    else {
+      wrn ("using %u outputs as bad state properties", model->num_outputs);
+      for (i = 0; i < model->num_outputs; i++)
+	aiger_add_bad (model, model->outputs[i].lit, 0);
+    }
   }
   msg (1, "BCJF = %u %u %u %u",
        model->num_bad,
@@ -394,6 +549,7 @@ int main (int argc, char ** argv) {
   firstandidx = firstlatchidx + model->num_latches;
   msg (2, "reencoded model");
   bad = calloc (model->num_bad, 1);
+  props = model->num_bad + model->num_justice;
   justice = calloc (model->num_justice, 1);
   unit (newvar ()), assert (nvars == 1);
   if (model->num_justice) {
@@ -401,38 +557,65 @@ int main (int argc, char ** argv) {
     for (i = 0; i < model->num_latches; i++)
       join[i] = newvar ();
   }
-  for (k = 0; k <= maxk; k++) {
+  for (k = 0; reached < props && k <= maxk; k++) {
     lit = encode ();
     assume (lit);
-    if (sat () == 10) break;
-    unit (-lit);
-  }
-  if (k <= maxk) {
-    printf ("1\n");
-    fflush (stdout);
-    found = 0;
-    assert (nstates == k + 1);
-    for (i = 0; i < model->num_bad; i++)
-      if (deref (states[k].bad[i]) > 0)
-	printf ("b%d", i), found++;
-    for (i = 0; i < model->num_justice; i++)
-      if (deref (states[k].justice[i].sat) > 0)
-	printf ("j%d", i), found++;
-    assert (found);
-    assert (model->num_bad || model->num_justice);
-    nl ();
-    for (i = 0; i < model->num_latches; i++)
-      print (states[0].latches[i].lit);
-    nl ();
-    for (i = 0; i <= k; i++) {
-      for (j = 0; j < model->num_inputs; j++)
-	print (states[i].inputs[j]);
-      nl ();
+    if (sat () == 10) {
+      int newly_reached_properties = 0;
+      printf ("1\n");
+      fflush (stdout);
+      if (nowitness) goto DONE;
+      assert (nstates == k + 1);
+      for (i = 0; i < model->num_bad; i++) {
+	if (bad[i]) continue;
+	if (deref (states[k].bad[i]) < 0) continue;
+	printf ("b%d", i);
+        bad[i] = 1;
+	assert (reached < props);
+	reached++;
+	newly_reached_properties++;
+      }
+      for (i = 0; i < model->num_justice; i++) {
+	if (justice[i]) continue;
+	if (deref (states[k].justice[i].sat) < 0) continue;
+	printf ("j%d", i);
+	justice[i] = 1;
+	assert (reached < props);
+	reached++;
+	newly_reached_properties++;
+      }
+      if (newly_reached_properties) {
+	nl ();
+	for (i = 0; i < model->num_latches; i++)
+	  print (states[0].latches[i].lit);
+	nl ();
+	for (i = 0; i <= k; i++) {
+	  for (j = 0; j < model->num_inputs; j++)
+	    print (states[i].inputs[j]);
+	  nl ();
+	}
+	printf (".\n");
+	fflush (stdout);
+	if (reached == props) break;
+      }
+    } else {
+      if (model->num_bad == 1 && !model->num_justice)
+	printf ("u%d\n", k), fflush (stdout);
+      unit (-lit);
     }
-    printf (".\n");
-    fflush (stdout);
   }
+  if (reached == props)
+    msg (1, "all %d properties reached at k = %d", props, k);
+  else {
+    assert (k == maxk + 1);
+    msg (1, "%d properties reached at k = %d",
+      reached, maxk);
+    msg (1, "%d properties unreached at k = %d",
+      props - reached, maxk);
+  }
+  if (!reached && props) printf ("2\n"), fflush (stdout);
 DONE:
   reset ();
+  msg (1, "done.");
   return 0;
 }

@@ -14,9 +14,10 @@
 # executable of a SAT solver below.  The SAT solver should conform to the
 # SAT competition input and output requirements.
 #
+start=`date +%s`
 if [ x"$SATSOLVER" = x ]
 then
-  satsolver="picosat"
+  satsolver="/home/biere/src/lingeling/lingeling"
 else
   satsolver="$SATSOLVER"
 fi
@@ -25,15 +26,25 @@ fi
 #
 # We need to add an k-induction based unbounded model checker to also
 # have an example for the ouput never being able to produce a one.  This
-# should be included in 'aigbmc'.
+# should be included in 'aigunroll'.
 #
 
 # No changes are required below this line.
 #
-aigertools="aigbmc aigtocnf soltostim wrapstim"
+AIGER=/home/biere/src/aiger
+aigunroll=$AIGER/aigunroll
+aigtocnf=/$AIGER/aigtocnf
+soltostim=$AIGER/soltostim
+wrapstim=$AIGER/wrapstim
+aigertools="$aigunroll $aigtocnf $soltostim $wrapstim"
 
 msg () {
-  [ $verbose = yes ] && echo "[mc.sh] $*" 1>&2
+  if [ $verbose = yes ] 
+  then
+  current=`date +%s`
+  delta=`expr $current - $start`
+  echo "[mc.sh] ($delta) $*" 1>&2
+  fi
 }
 
 cleanup () {
@@ -55,7 +66,7 @@ die () {
 input=""
 debug=no
 verbose=no
-maxk=100
+maxk=1000
 
 while [ $# -gt 0 ]
 do
@@ -114,16 +125,22 @@ cd $basedir || exit 1
 for tool in $satsolver $aigertools
 do
   found=no
-  for d in `echo "$basedir:$PATH" | sed -e 's,:, ,g'`
-  do
-    [ -x $d/$tool ] || continue
+  if [ -f $tool ]
+  then
     found=yes
-    break
-  done
-  [ $found = no ] && \
-  die "could not find '$tool' in '$basedir' nor in PATH"
+    d=""
+  else
+    for d in `echo "$basedir:$PATH" | sed -e 's,:, ,g'`
+    do
+      [ -x $d/$tool ] || continue
+      found=yes
+      break
+    done
+    [ $found = no ] && \
+    die "could not find '$tool' in '$basedir' nor in PATH"
+    ln -s $d/$tool $tmp/bin/$tool || exit 1
+  fi
   msg "found '$d/$tool'"
-  ln -s $d/$tool $tmp/bin/$tool || exit 1
 done
 
 PATH=$tmp/bin:$PATH
@@ -133,15 +150,14 @@ PATH=$tmp/bin:$PATH
 k=0
 msg "maximum bound $maxk"
 found=no
-#while [ $k -le $maxk ]
-while true
+while [ $k -le $maxk ]
 do
   expansion=$tmp/expansion.aig
   msg "$k expanding"
-  aigbmc $verboseoption $k $model $expansion || exit 1
+  $aigunroll $verboseoption $k $model $expansion || exit 1
   msg "$k converting"
   cnf=$tmp/cnf
-  aigtocnf $expansion $cnf || exit 1
+  $aigtocnf $expansion $cnf || exit 1
   msg "$k $satsolver"
   solution=$tmp/solution
   $satsolver $cnf 1>$solution
@@ -160,9 +176,9 @@ then
   echo 1
   msg "translating"
   estim=$tmp/expanded.stim
-  soltostim $expansion $solution > $estim
+  $soltostim $expansion $solution > $estim
   msg "wrapping"
-  wrapstim $model $expansion $k $estim || exit 1
+  $wrapstim $model $expansion $k $estim || exit 1
 else
   echo x
 fi

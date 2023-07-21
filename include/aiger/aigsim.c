@@ -1,6 +1,6 @@
 /***************************************************************************
-Copyright (c) 2006-2011, Armin Biere, Johannes Kepler University, Austria.
-Copyright (c) 2011, Siert Wieringa, Aalto University, Finland.
+Copyright (c) 2006-2018, Armin Biere, Johannes Kepler University, Austria.
+Copyright (c) 2011-2012, Siert Wieringa, Aalto University, Finland.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to
@@ -34,6 +34,7 @@ static int close_file;
 static unsigned char *current;
 static unsigned char *next;
 static aiger *model;
+static int filter;
 
 static void
 die (const char *fmt, ...)
@@ -45,17 +46,6 @@ die (const char *fmt, ...)
   va_end (ap);
   fputc ('\n', stderr);
   exit (1);
-}
-
-static void
-wrn (const char *fmt, ...)
-{
-  va_list ap;
-  fputs ("[aigsim] WARNING ", stderr);
-  va_start (ap, fmt);
-  vfprintf (stderr, fmt, ap);
-  va_end (ap);
-  fputc ('\n', stderr);
 }
 
 static unsigned char
@@ -111,42 +101,74 @@ print_vcd_symbol (const char *symbol)
     fputc ((isspace (ch) ? '"' : ch), stdout);
 }
 
+static int last = EOF;
+static int first = 0;
+
+static int ignore_line_starting_with (int ch)
+{
+  if (ch == 'c') return 1;
+  if (ch == 'u') return 1;
+  if (!filter) return 0;
+  if (last != '\n') return 0;
+  if (ch == '0') return 0;
+  if (ch == '1') return 0;
+  if (ch == 'b') return 0;
+  if (ch == 'x') return 0;
+  if (ch == '.') return 0;
+  return 1;
+}
+
 static int
 nxtc (FILE * file)
 {
-  int ch;
+  int start, ch;
 RESTART:
-  ch = getc (file);
-  if (ch == 'c')
-    {
-      while ((ch = getc (file)) != '\n')
-	if (ch == EOF)
-	  die ("unexpected EOF in comment");
-      goto RESTART;
-    }
-  return ch;
+  start = getc (file);
+  if (start == EOF) return start;
+  if (filter && last == EOF) {
+    if (start != '0' && start != '1')
+      {
+IGNORE_REST_OF_LINE:
+	assert (last == '\n' || last == EOF);
+	while ((ch = getc (file)) != '\n')
+	  if (ch == EOF)
+	    die ("unexpected EOF after '%c'", start);
+	goto RESTART;
+      }
+    ch = getc (file);
+    if (ch != '\n')
+      goto IGNORE_REST_OF_LINE;
+    ungetc (ch, file);
+    return last = start;
+  }
+  if (ignore_line_starting_with (start))
+    goto IGNORE_REST_OF_LINE;
+  last = start;
+  return start;
 }
 
-#define USAGE \
-"usage: aigsim [<option> ...] [ <model> [<stimulus>] ]\n" \
-"\n" \
-"with\n" \
-"\n" \
-"<model>         AIG in AIGER format\n" \
-"<stimulus>      stimulus (file of 0/1/x input vectors)\n" \
-"\n" \
-"and <option> one of the following\n" \
-"\n" \
-"-h              usage\n" \
-"-m              copy/move outputs as bad properties\n" \
-"-c              check witness and do not print trace (implies '-w', '-2')\n" \
-"-w              assume stimulus is a witness (first line is '1')\n" \
-"-v              produce VCD output trace instead of transitions\n" \
-"-d              add delays between input and output changes to VCD\n" \
-"-2              ground three valued stimulus by setting 'x' to '0'\n" \
-"-3              enable three valued stimulus in random simulation\n" \
-"-r <vectors>    random stimulus of <vectors> input vectors\n" \
+static const char * USAGE =
+"usage: aigsim [<option> ...] [ <model> [<stimulus>] ]\n"
+"\n"
+"with\n"
+"\n"
+"<model>         AIG in AIGER format\n"
+"<stimulus>      stimulus (file of 0/1/x input vectors)\n"
+"\n"
+"and <option> one of the following\n"
+"\n"
+"-h              usage\n"
+"-m              copy/move outputs as bad properties\n"
+"-c              check witness and do not print trace (implies '-w', '-2')\n"
+"-w              assume stimulus is a witness (first line is '1')\n"
+"-v              produce VCD output trace instead of transitions\n"
+"-d              add delays between input and output changes to VCD\n"
+"-f              force smart line filtering\n"
+"-2              ground three valued stimulus by setting 'x' to '0'\n"
+"-3              enable three valued stimulus in random simulation\n"
+"-r <vectors>    random stimulus of <vectors> input vectors\n"
 "-s <seed>       set seed of random number generator (default '0')\n"
+;
 
 #define ALLOC_STATES 100
 
@@ -181,13 +203,15 @@ main (int argc, char **argv)
     {
       if (!strcmp (argv[i], "-h"))
 	{
-	  fprintf (stderr, USAGE);
+	  fputs (USAGE, stderr);
 	  exit (0);
 	}
       else if (!strcmp (argv[i], "-c"))
 	check = witness = ground = 1;
       else if (!strcmp (argv[i], "-m"))
 	move = 1;
+      else if (!strcmp (argv[i], "-f"))
+	filter = 1;
       else if (!strcmp (argv[i], "-w"))
 	witness = 1;
       else if (!strcmp (argv[i], "-v"))
@@ -257,11 +281,8 @@ main (int argc, char **argv)
   if (error)
     die ("%s", error);
 
-  if (!move && !model->num_bad && model->num_outputs)
-    {
-      wrn ("no bad state properties found using outputs instead");
-      move = 1;
-    }
+  if (!move && !model->num_bad && !model->num_justice && model->num_outputs)
+    move = 1;
 
   if (move) 
     {
@@ -357,10 +378,10 @@ readNextWitness:
       /* Read specification of properties witnessed */
       ch = nxtc (file);
       if ( ch != 'b' && ch != 'j' ) 
-	die("expected 'b' or 'j' in witness\n");
+	die("expected 'b' or 'j' in witness");
       
       if (print)
-	printf("Grounded instance of this trace should be a witness for: {");
+	  printf("Grounded instance of this trace should be a witness for: {");      
 	      	     
       do 
 	{   
@@ -370,7 +391,7 @@ readNextWitness:
 	  och = ch;
 	  ch = nxtc(file);
 	  if ( ch < '0' || ch > '9' )
-	    die ("expected integer after '%c' in witness\n", ch);
+	    die ("expected integer after '%c' in witness", ch);
 	  
 	  j=0;
 	  do 
@@ -382,18 +403,18 @@ readNextWitness:
 	  while( ch >= '0' && ch <= '9' );
 
 	  if ( ch != 'b' && ch != 'j' && ch != '\n' )
-	    die ("expected digit, 'b', 'j' or new line in witness\n");
+	    die ("expected digit, 'b', 'j' or new line in witness");
 		
 	  if ( ( och == 'b' && j >= model->num_bad ) ||
 	       ( och == 'j' && j >= model->num_justice ) )
-	    die ("'%c%d' specified in witness does not exist in model\n", 
+	    die ("'%c%d' specified in witness does not exist in model", 
 	         och, j);
 	  else if ( knownResult ) {
 	    i = j + ((och == 'j') ? model->num_bad : 0);
 	    if ( expectTrace && 
 		 prop_result[i] != 2 &&
 		 prop_result[i] != (expectTrace?1:0) )
-	      die ("Inconsistent results specified for %c%d\n", och, j);	    
+	      die ("Inconsistent results specified for %c%d", och, j);	    
 
 	    expected_prop[i] = 1;
 	    prop_result[i] = expectTrace ? 1 : 0;
@@ -408,12 +429,12 @@ readNextWitness:
 	printf(" }\n");
 
       if (ch != '\n')
-	die("expected new line after \"%c%d\" in witness\n", och, j);
+	die("expected new line after \"%c%d\" in witness", och, j);
       
       if (!expectTrace) {
 	ch = nxtc(file);
 	if (ch != '.')
-	  die("expected '.' after witness without trace\n");
+	  die("expected '.' after witness without trace");
 	goto skipWitness;
       }
     }
@@ -437,16 +458,26 @@ readNextWitness:
 	
 	ch = nxtc(file);
 	if ( ch != '0' && ch != '1' && ch != 'x' ) 
-	  die("expected '0', '1' or 'x' in initial state in witness\n");
+	  die("expected '0', '1' or 'x' in initial state in witness");
 	    
-	if ( symbol->reset <= 1 && (ch == 'x' || symbol->reset != ch-'0') )
-	  die("witness specifies invalid initial state for latch l%d\n", j);
+	if (symbol->reset <= 1)
+	  {
+	    /* Norbert Manthey observed that it might be also OK, to have 'x'
+	     * for an initialized latch, since in this case the simulator can
+	     * just pick up the value from the model.  So we support this now
+	     * (for him ;-).
+	     */
+	    if (ch == 'x')
+	      ch = '0' + symbol->reset;
+	    else if (symbol->reset != (ch - '0'))
+	      die("witness specifies invalid initial state for latch l%d", j);
+	  }
 
 	current[symbol->lit/2] = (ch != 'x') ? (ch - '0') : (ground ? 0 : 2);
       }
       
     if ( nxtc(file) != '\n' )
-      die("expected new line after initial state in witness\n");
+      die("expected new line after initial state in witness");
   }
   /* Set initial state */
   else
@@ -730,7 +761,7 @@ readNextWitness:
 	else if (print)
 	  printf(" j%d", i);
 
-	if ( !prop_result[i] && foundjust )
+	if ( !prop_result[model->num_bad+i] && foundjust )
 	  die("Trace witnesses j%d which was previously specified unsatisfiable\n", i);	
 
 	/* Free memory for this just constraint */

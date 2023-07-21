@@ -8,9 +8,10 @@
  */
 
 #include <iostream>
-#include <filesystem>
+#include <experimental/filesystem>
 #include <string>
 #include <vector>
+#include <string.h>
 #include <stdio.h>
 
 #include "abcSynthesis.hpp"
@@ -19,23 +20,36 @@ using namespace std;
 
 int main(int argc, char** argv){
     /* Parse arguments */
-    bool optimize = true;
+    bool optimize = false;
+    bool espresso = false;
     string folderName = "data/plas";
     string outFolderName = "data/x";
 
-    if(argv[1] == "-opt"){
+	if(((strcmp(argv[1], "-opt") == 0) && (strcmp(argv[2], "-espresso") == 0)) || ((strcmp(argv[2], "-opt") == 0) && (strcmp(argv[1], "-espresso") == 0))){
+            optimize = true;
+            espresso = true;
+            folderName = argv[3];
+            outFolderName = argv[4];
+    } else if(strcmp(argv[1], "-opt") == 0){
         optimize = true;
+        espresso = false;
         folderName = argv[2];
         outFolderName = argv[3];
-    } else {
+    } else if(strcmp(argv[1], "-espreso") == 0){
+        optimize = false;
+        espresso = true;
+        folderName = argv[2];
+        outFolderName = argv[3];
+    } else {   optimize = false;
+        espresso = false;
         folderName = argv[1];
         outFolderName = argv[2];
     }
 
     /* List all the PLA files in the folder */
     vector<string> plaFiles;
-    for(const auto& entry : std::filesystem::directory_iterator(folderName)){
-        if(entry.is_regular_file()){
+    for(const auto& entry : std::experimental::filesystem::directory_iterator(folderName)){
+        if(std::experimental::filesystem::is_regular_file(entry)){
             plaFiles.push_back(entry.path().string());
         }
     }
@@ -76,6 +90,24 @@ int main(int argc, char** argv){
             return 1;
         }
 
+        // Print stats
+        if (espresso) {
+            sprintf(command, "espresso");
+            cout << command << endl;
+            if ( Cmd_CommandExecute(pAbc, command) ) {
+                fprintf(stdout, "Error printintg stats %s\n", command);
+                return 1;
+            }
+        }
+
+        // Print stats
+        sprintf(command, "print_stats");
+        cout << command << endl;
+        if ( Cmd_CommandExecute(pAbc, command) ) {
+            fprintf(stdout, "Error printintg stats %s\n", command);
+            return 1;
+        }
+
         if (optimize) {
             // Logic minimization step
             // sprintf(command, "resyn");
@@ -95,8 +127,16 @@ int main(int argc, char** argv){
             }
         }
 
+        // Print stats
+        sprintf(command, "print_stats");
+        cout << command << endl;
+        if ( Cmd_CommandExecute(pAbc, command) ) {
+            fprintf(stdout, "Error printintg stats %s\n", command);
+            return 1;
+        }
+
         // Write the AIG file
-        unsigned first = plaFile.find("output");
+        unsigned first = plaFile.find("N");
         unsigned last = plaFile.find(".pla");
         string outFilename = outFolderName + '/' + plaFile.substr(first, last - first) + ".aig";
         sprintf(command, "write_aiger %s", outFilename.c_str());
@@ -109,7 +149,7 @@ int main(int argc, char** argv){
         cout << msg << endl;
 
         // Remove PLA file
-        remove(filename);
+//        remove(filename);
     }
     // End framework
     Abc_Stop();

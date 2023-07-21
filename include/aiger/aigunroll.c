@@ -1,5 +1,5 @@
 /***************************************************************************
-Copyright (c) 2006-2011, Armin Biere, Johannes Kepler University, Austria.
+Copyright (c) 2006-2018, Armin Biere, Johannes Kepler University, Austria.
 Copyright (c) 2011, Siert Wieringa, Aalto University, Finland.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -40,10 +40,11 @@ struct LatchOrInput
   simpaig *aig;
 };
 
+static int strip;
+static int unroll;
 static unsigned k;
 static aiger *model;
 static aiger *expansion;
-static int strip;
 static unsigned verbose;
 static simpaigmgr *mgr;
 static LatchOrInput *lois;
@@ -124,8 +125,32 @@ build_rec (unsigned lit)
   return res;
 }
 
-static simpaig *
-build (void)
+static simpaig ** outputs;
+static unsigned num_outputs, size_outputs;
+
+static void push_output (simpaig * aig)
+{
+  if (num_outputs == size_outputs)
+    {
+      size_outputs = size_outputs ? 2 * size_outputs : 1;
+      outputs = realloc (outputs, size_outputs * sizeof *outputs);
+    }
+
+  outputs[num_outputs++] = simpaig_inc (mgr, aig);
+}
+
+static void
+reset_outputs (void)
+{
+  for (unsigned i = 0; i < num_outputs; i++)
+    simpaig_dec (mgr, outputs[i]);
+  free (outputs);
+  outputs = 0;
+  num_outputs = size_outputs = 0;
+}
+
+static void
+build_shifted_latches (void)
 {
   simpaig *aig, *res, *shifted, *tmp, *lhs, *rhs, *out;
   simpaig *pos, *neg, **loop;
@@ -167,8 +192,30 @@ build (void)
 	  simpaig_dec (mgr, lhs);
 	}
     }
+}
 
-#if 1
+static void
+add_latches_of_last_frame_as_output (void)
+{
+  simpaig * tmp, * lhs;
+  unsigned i;
+
+  for (i = 0; i < model->num_latches; i++)
+    {
+      tmp = build_rec (model->latches[i].lit);
+      if (k > 0) lhs = simpaig_shift (mgr, tmp, k);
+      else       lhs = simpaig_inc (mgr, tmp);
+      push_output (lhs);
+      simpaig_dec (mgr, lhs);
+    }
+}
+
+static void
+build_disjuction_of_shifted_single_bad_output (void)
+{
+  simpaig * res, * out, * shifted, * tmp;
+  unsigned i;
+
   out = build_rec (model->outputs[0].lit);
   res = simpaig_false (mgr);
   for (i = 0; i <= k; i++)
@@ -179,132 +226,15 @@ build (void)
       simpaig_dec (mgr, res);
       res = tmp;
     }
-#else
-  // THIS CODE BECAME OBSOLETE AND ACTUALLY DOES NOT MATCH THE AIGER API
-  // WE KEEP IT FOR REFERENCE ...
 
-  /* SW110303 For all "bad" outputs
-   */
-  if ( model->num_badoutputs ) {
-    res = simpaig_false (mgr);
-
-    for( i = 0; i < model->num_badoutputs; i++ ) 
-      {
-	out = build_rec (model->outputs[i].lit);
-	
-	for (j = 0; j <= k; j++)
-	  {
-	    shifted = simpaig_shift (mgr, out, j);
-	    tmp = simpaig_or (mgr, res, shifted);
-	    simpaig_dec (mgr, shifted);
-	    simpaig_dec (mgr, res);
-	    res = tmp;
-	  }
-      }
-  }
-  else res = simpaig_not( simpaig_false (mgr) );
-
-  /* SW110303 Constraints for "fair" outputs
-   */
-  if (model->num_outputs > model->num_badoutputs )
-    {
-      /* loop_0 = ( latches @0 == latches.next @k )
-
-         For i=1..k
-           loop_i = loop_(i-1) or ( latches @i == latches.next @k )
-       */
-      loop = malloc ((k+1) * sizeof loop[0]);
-
-      /* For all i=0..k construct loop_i
-       */
-      for (i = 0; i <= k; i++)
-	{
-	  /* loop_i = true
-	   */
-	  loop[i] = simpaig_not ( simpaig_false (mgr) );
-
-	  /* For all latches
-	     loop_i&= latch_j @i == latch_j.next @k
-	   */
-	  for (j = 0; j < model->num_latches; j++)
-	    {
-	      tmp = build_rec (model->latches[j].next);
-	      lhs = simpaig_shift (mgr, tmp, k);
-
-	      tmp = build_rec (model->latches[j].lit);
-	      rhs = simpaig_shift (mgr, tmp, i);
-
-	      pos = simpaig_implies (mgr, lhs, rhs);
-	      neg = simpaig_implies (mgr, simpaig_not(lhs), simpaig_not(rhs));
-
-	      simpaig_dec (mgr, lhs);
-	      simpaig_dec (mgr, rhs);
-
-	      lhs = simpaig_and (mgr, pos, neg);
-	      rhs = loop[i];
-	      loop[i] = simpaig_and (mgr, lhs, rhs);
-
-	      simpaig_dec (mgr, pos);
-	      simpaig_dec (mgr, neg);
-	      simpaig_dec (mgr, lhs);
-	      simpaig_dec (mgr, rhs);
-	    }
-
-	  /* if ( i>0 ) loop_i |= loop_(i-1)
-	   */
-	  if ( i > 0 ) {
-            tmp = loop[i];
-	    loop[i] = simpaig_or (mgr, loop[i-1], tmp);
-	    simpaig_dec (mgr, tmp);
-	  }
-	}
-
-      /* For all fair outputs
-       */
-      for( i = model->num_badoutputs; i < model->num_outputs; i++ ) 
-	{
-	  out = build_rec (model->outputs[i].lit);
-	  tmp = simpaig_false (mgr);
-
-	  /* tmp = ( fair_i @0 && loop_0 ) || 
-                   ( fair_i @1 && loop_1 ) ||
-                   ... 
-                   ( fair_i @k && loop_k )
-	   */
-	  for (j = 0; j <= k; j++)
-	    {	  
-	      shifted = simpaig_shift (mgr, out, j);
-	      lhs = simpaig_and (mgr, shifted, loop[j]);
-	      rhs = tmp;
-	      tmp = simpaig_or (mgr, lhs, rhs);
-	      simpaig_dec (mgr, shifted);
-	      simpaig_dec (mgr, rhs);
-	      simpaig_dec (mgr, lhs);
-	    }
-
-	  /* res&= tmp
-	   */
-	  lhs = res;
-	  res = simpaig_and (mgr, lhs, tmp);
-	  simpaig_dec (mgr, lhs);
-	  simpaig_dec (mgr, tmp);
-	}
-
-      /* Decrease loop_i reference counters and free memory
-       */
-      for (i = 0; i <= k; i++)
-	{
-	  simpaig_dec (mgr, loop[i]);
-	}
-      free(loop);
-    }
-#endif
-
-  tmp = simpaig_substitute (mgr, res);
+  push_output (res);
   simpaig_dec (mgr, res);
-  res = tmp;
+}
 
-  return res;
+static void
+substitute_outputs (void)
+{
+  simpaig_substitute_parallel (mgr, outputs, num_outputs);
 }
 
 static const char *
@@ -406,14 +336,17 @@ copyaig (simpaig * aig)
 }
 
 static void
-expand (simpaig * aig)
+expand (void)
 {
-  unsigned maxvar;
-  simpaig_assign_indices (mgr, aig);
+  unsigned maxvar, i;
+  for (i = 0; i < num_outputs; i++)
+    simpaig_assign_indices (mgr, outputs[i]);
   maxvar = simpaig_max_index (mgr);
   aigs = calloc (maxvar + 1, sizeof aigs[0]);
-  copyaig (aig);
-  aiger_add_output (expansion, simpaig_unsigned_index (aig), 0);
+  for (i = 0; i < num_outputs; i++)
+    copyaig (outputs[i]);
+  for (i = 0; i < num_outputs; i++)
+    aiger_add_output (expansion, simpaig_unsigned_index (outputs[i]), 0);
   free (aigs);
   simpaig_reset_indices (mgr);
   free (buffer);
@@ -428,6 +361,7 @@ expand (simpaig * aig)
 "  -v     increase verbose level\n" \
 "  -a     force ASCII output\n" \
 "  -s     strip symbols from target model\n" \
+"  -u     unroll only ignoring all properties\n" \
 "  <k>    bound (default 0)\n" \
 "  <src>  sequential source model in AIGER format\n" \
 "  <dst>  combinational target model in AIGER format\n"
@@ -459,6 +393,8 @@ main (int argc, char **argv)
 	ascii = 1;
       else if (!strcmp (argv[i], "-s"))
 	strip = 1;
+      else if (!strcmp (argv[i], "-u"))
+	unroll = 1;
       else if (!strcmp (argv[i], "-v"))
 	verbose++;
       else if (argv[i][0] == '-')
@@ -499,22 +435,34 @@ main (int argc, char **argv)
        model->num_outputs,
        model->num_ands);
 
-  if (model->num_bad) 
-    die ("can not handle bad state properties (use 'aigmove')");
-  if (model->num_constraints) 
-    die ("can not handle environment constraints (use 'aigmove')");
-  if (!model->num_outputs) die ("no output");
-  if (model->num_outputs > 1) die ("more than one output");
+  if (unroll)
+    {
+      if (model->num_bad) wrn ("ignoring bad state properties");
+      if (model->num_constraints) wrn ("ignoring environment constraints");
+      if (model->num_outputs) wrn ("ignoring outputs");
+    }
+  else
+    {
+      if (model->num_bad) 
+	die ("can not handle bad state properties (use 'aigmove')");
+      if (model->num_constraints) 
+	die ("can not handle environment constraints (use 'aigmove')");
+      if (!model->num_outputs) die ("no output");
+      if (model->num_outputs > 1) die ("more than one output");
+    }
   if (model->num_justice) wrn ("ignoring justice properties");
   if (model->num_fairness) wrn ("ignoring fairness constraints");
 
   aiger_reencode (model);
 
   mgr = simpaig_init ();
-  res = build ();
+  build_shifted_latches ();
+  if (unroll) add_latches_of_last_frame_as_output ();
+  else build_disjuction_of_shifted_single_bad_output ();
+  substitute_outputs ();
   expansion = aiger_init ();
-  expand (res);
-  simpaig_dec (mgr, res);
+  expand ();
+  reset_outputs ();
 
   for (i = 0; i <= model->maxvar; i++)
     simpaig_dec (mgr, lois[i].aig);

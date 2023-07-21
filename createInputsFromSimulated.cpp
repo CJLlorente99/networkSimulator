@@ -1,5 +1,5 @@
 #include <iostream>
-#include <filesystem>
+#include <experimental/filesystem>
 #include <string>
 #include <vector>
 #include <stdio.h>
@@ -18,8 +18,8 @@ int main(int argc, char *argv[]){
 
     /* List all the SimulatedOutput files in the folder */
     vector<string> simFiles;
-    for(const auto& entry : std::filesystem::directory_iterator(simulatedOutputsFolder)){
-        if(entry.is_regular_file()){
+    for(const auto& entry : std::experimental::filesystem::directory_iterator(simulatedOutputsFolder)){
+        if(std::experimental::filesystem::is_regular_file(entry)){
             simFiles.push_back(entry.path().string());
         }
     }
@@ -47,7 +47,7 @@ int main(int argc, char *argv[]){
             matrix[sim][neuron] = int(line[1]) - 48;
         }
         // Delete simFile
-        remove(simFiles[neuron].c_str());
+//        remove(simFiles[neuron].c_str());
     }
     
     // Print the matrix into a file
