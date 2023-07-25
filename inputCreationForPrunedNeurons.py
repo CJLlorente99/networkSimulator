@@ -21,7 +21,6 @@ if __name__ == "__main__":
             count += 1
             if count % 5000 == 0:
                 print(f'{count} lines read')
-                break
         print(f'{allInputsFile} read')
 
     dfPrune = pd.read_csv(pruneFilename)
