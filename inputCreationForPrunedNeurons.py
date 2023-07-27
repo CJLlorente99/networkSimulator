@@ -1,5 +1,6 @@
 import sys
 import pandas as pd
+import numpy as np
 
 if __name__ == "__main__":
     allInputsFile = sys.argv[1]
@@ -14,9 +15,17 @@ if __name__ == "__main__":
 
     for neuron in dfPrune.columns:
         df = dfInputs.drop(dfInputs.columns[dfPrune[neuron]], axis=1)
+        dfNp = df.to_numpy()
 
-        with open(f'{outputFolder}/{neuron}', 'w') as f:
-            for index, row in df.iterrows():
-                f.write(''.join(row.to_string(header=False, index=False).replace('\n', '')))
-                f.write('\r\n')
-            print(f'{outputFolder}/{neuron} created successfully')
+        np.savetext(f'{outputFolder}/{neuron}',
+                    dfNp,
+                    delimiter='',
+                    fmt='%i',
+                    newline='\r\n')
+
+        # with open(f'{outputFolder}/{neuron}', 'w') as f:
+        #     for index, row in df.iterrows():
+        #         f.write(''.join(row.to_string(header=False, index=False).replace('\n', '')))
+        #         f.write('\n')
+        #     print(f'{outputFolder}/{neuron} created successfully')
+
