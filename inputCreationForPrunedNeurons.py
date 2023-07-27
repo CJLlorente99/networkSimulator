@@ -22,6 +22,7 @@ if __name__ == "__main__":
                     delimiter='',
                     fmt='%i',
                     newline='\r\n')
+        print(f'{outputFolder}/{neuron} created successfully')
 
         # with open(f'{outputFolder}/{neuron}', 'w') as f:
         #     for index, row in df.iterrows():
