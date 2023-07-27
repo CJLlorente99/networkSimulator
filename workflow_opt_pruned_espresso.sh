@@ -1,6 +1,8 @@
 baseFolder=/media/carlosl/CHAR/data
-modelName=eeb/eeb_prunedBT6_100ep_100npl
+modelName=eeb/eeb_prunedBT8_100ep_100npl
 plasSubfolder=ESPRESSO
+#plasSubfolder=ESPRESSOOptimizedPerClass
+#plasSubfolder=ESPRESSOOptimizedPerEntry
 
 printf "CREATE FOLDERS\n\n"
 python3 ./folderCreation.py ${baseFolder} ${modelName} ${plasSubfolder}
@@ -28,7 +30,7 @@ printf "Joining outputs for next layer inputs\n\n"
 printf "TEST\n\n"
 
 printf "Creating input files for pruned neurons\n\n"
-python3 ./inputCreationForPrunedNeurons.py $baseFolder/inputs/${modelName}/testlayer1 $baseFolder/savedModels/${modelName}_prunedInfol1.csv $baseFolder/auxFolder
+python3 ./inputCreationForPrunedNeurons.py $baseFolder/inputs/${modelName}/testlayer1.csv $baseFolder/savedModels/${modelName}_prunedInfol1.csv $baseFolder/auxFolder
 
 printf "Simulating outputs test\n\n"
 ./networkSimulatorAigerPruned $baseFolder/aiger/$modelName/$plasSubfolder/layer2 $baseFolder/auxFolder $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/testlayer2

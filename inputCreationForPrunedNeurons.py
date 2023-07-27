@@ -7,8 +7,15 @@ if __name__ == "__main__":
     pruneFilename = sys.argv[2]
     outputFolder = sys.argv[3]
 
-    dfInputs = pd.read_csv(allInputsFile)
-    print(f'{allInputsFile} read')
+    if allInputsFile.endswith('.csv'):
+        dfInputs = pd.read_csv(allInputsFile, index_col=0)
+        print(f'{allInputsFile} read. Shape {dfInputs.shape}')
+    else:
+        dfInputs = np.genfromtxt(allInputsFile, delimiter=1)
+        columns = [f'N{i:04d}' for i in range(dfInputs.shape[1])]
+        dfInputs = pd.DataFrame(dfInputs, columns=columns)
+        dfInputs.astype(int)
+        print(f'{allInputsFile} read. Shape {dfInputs.shape}')
 
     dfPrune = pd.read_csv(pruneFilename)
     print(f'{pruneFilename} read')
@@ -21,7 +28,7 @@ if __name__ == "__main__":
                     dfNp,
                     delimiter='',
                     fmt='%i',
-                    newline='\r\n')
+                    newline='\n')
         print(f'{outputFolder}/{neuron} created successfully')
 
         # with open(f'{outputFolder}/{neuron}', 'w') as f:
