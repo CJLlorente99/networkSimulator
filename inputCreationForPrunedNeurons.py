@@ -17,7 +17,7 @@ if __name__ == "__main__":
         df = dfInputs.drop(dfInputs.columns[dfPrune[neuron]], axis=1)
         dfNp = df.to_numpy()
 
-        np.savetext(f'{outputFolder}/{neuron}',
+        np.savetxt(f'{outputFolder}/{neuron}',
                     dfNp,
                     delimiter='',
                     fmt='%i',
