@@ -1,6 +1,6 @@
 baseFolder=/media/carlosl/CHAR/data
-modelName=eeb_pruned_100ep_100npl
-plasSubfolder=ABCOptimizedPerClass
+modelName=eeb_prunedRegular20_100ep_100npl
+plasSubfolder=ABC
 
 printf "CREATE FOLDERS\n\n"
 python3 ./folderCreation.py ${baseFolder} ${modelName} ${plasSubfolder}

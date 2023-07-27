@@ -1,5 +1,5 @@
 baseFolder=/media/carlosl/CHAR/data
-modelName=eeb_prunedIrregular20_100ep_100npl
+modelName=eeb_prunedBT6_100ep_100npl
 plasSubfolder=ESPRESSO
 
 printf "CREATE FOLDERS\n\n"
