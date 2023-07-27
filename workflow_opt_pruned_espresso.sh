@@ -5,9 +5,6 @@ plasSubfolder=ESPRESSO
 printf "CREATE FOLDERS\n\n"
 python3 ./folderCreation.py ${baseFolder} ${modelName} ${plasSubfolder}
 
-printf "FORWARD INPUT LAYER\n\n"
-python3 ./inputFilesGenerator.py $baseFolder/savedModels/${modelName} ${baseFolder}/inputs/${modelName}
-
 printf "DEALING WITH SECOND LAYER\n\n"
 
 printf "ESPRESSO\n\n"
