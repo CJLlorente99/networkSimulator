@@ -12,6 +12,10 @@ if __name__ == '__main__':
 			os.makedirs(f'{baseFolder}/plas/{modelName}/{plasSubfolder}/layer1_espresso')
 			os.makedirs(f'{baseFolder}/plas/{modelName}/{plasSubfolder}/layer2_espresso')
 			os.makedirs(f'{baseFolder}/plas/{modelName}/{plasSubfolder}/layer3_espresso')
+
+	# Create folder for input (input layer forward output)
+	if not os.path.exists(f'{baseFolder}/inputs/{modelName}'):
+		os.makedirs(f'{baseFolder}/inputs/{modelName}')
 	
 	# Create folder for aiger
 	if not os.path.exists(f'{baseFolder}/aiger/{modelName}/{plasSubfolder}'):

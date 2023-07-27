@@ -6,22 +6,8 @@ if __name__ == "__main__":
     pruneFilename = sys.argv[2]
     outputFolder = sys.argv[3]
 
-    columns = [f'N{i:02d}' for i in range(100)]
-    dfInputs = pd.DataFrame(columns=columns)
-    with open(allInputsFile, 'r') as f:
-        count = 0
-        while True:
-            line = f.readline()
-
-            if not line:
-                break
-
-            line = list(map(int, list(line)[:-1]))
-            dfInputs = pd.concat([dfInputs, pd.DataFrame(line, index=columns, columns=[0]).transpose()], axis=0)
-            count += 1
-            if count % 5000 == 0:
-                print(f'{count} lines read')
-        print(f'{allInputsFile} read')
+    dfInputs = pd.read_csv(allInputsFile)
+    print(f'{allInputsFile} read')
 
     dfPrune = pd.read_csv(pruneFilename)
     print(f'{pruneFilename} read')
