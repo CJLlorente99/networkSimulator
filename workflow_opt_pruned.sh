@@ -1,15 +1,15 @@
 baseFolder=/media/carlosl/CHAR/data
-modelName=eeb/eeb_prunedBT10_100ep_100npl
-#plasSubfolder=ABC
+modelName=bnn/bnn_prunedBT8_100ep_4096npl
+plasSubfolder=ABC
 #plasSubfolder=ABCOptimizedPerClass
-plasSubfolder=ABCOptimizedPerEntry
+#plasSubfolder=ABCOptimizedPerEntry
 
 printf "CREATE FOLDERS\n\n"
-python3 ./folderCreation.py ${baseFolder} ${modelName} ${plasSubfolder}
+#python3 ./folderCreation.py ${baseFolder} ${modelName} ${plasSubfolder}
 
 printf "DEALING WITH SECOND LAYER\n\n"
 
-./abcSynthesis -opt $baseFolder/plas/$modelName/$plasSubfolder/layer1 $baseFolder/aiger/$modelName/$plasSubfolder/layer2
+#./abcSynthesis -opt $baseFolder/plas/$modelName/$plasSubfolder/layer1 $baseFolder/aiger/$modelName/$plasSubfolder/layer2
 
 printf "TRAIN\n\n"
 
@@ -25,13 +25,13 @@ printf "Joining outputs for next layer inputs\n\n"
 printf "TEST\n\n"
 
 printf "Creating input files for pruned neurons\n\n"
-python3 ./inputCreationForPrunedNeurons.py $baseFolder/inputs/${modelName}/testlayer1.csv $baseFolder/savedModels/${modelName}_prunedInfol1.csv $baseFolder/auxFolder
+#python3 ./inputCreationForPrunedNeurons.py $baseFolder/inputs/${modelName}/testlayer1.csv $baseFolder/savedModels/${modelName}_prunedInfol1.csv $baseFolder/auxFolder
 
 printf "Simulating outputs test\n\n"
-./networkSimulatorAigerPruned $baseFolder/aiger/$modelName/$plasSubfolder/layer2 $baseFolder/auxFolder $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/testlayer2
+#./networkSimulatorAigerPruned $baseFolder/aiger/$modelName/$plasSubfolder/layer2 $baseFolder/auxFolder $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/testlayer2
 
 printf "Joining outputs for next layer inputs\n\n"
-./createInputsFromSimulated $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/testlayer2 $baseFolder/inputSimulated/$modelName/$plasSubfolder/testlayer2
+#./createInputsFromSimulated $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/testlayer2 $baseFolder/inputSimulated/$modelName/$plasSubfolder/testlayer2
 
 ################################################################################################################################################################################################
 

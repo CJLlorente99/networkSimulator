@@ -1,8 +1,10 @@
 baseFolder=/media/carlosl/CHAR/data
-modelName=eeb/eeb_prunedBT8_100ep_100npl
-plasSubfolder=ESPRESSO
+modelName=eeb/eeb_prunedBT12_100ep_100npl
+#plasSubfolder=ESPRESSO
 #plasSubfolder=ESPRESSOOptimizedPerClass
-#plasSubfolder=ESPRESSOOptimizedPerEntry
+#plasSubfolder=ESPRESSOOptimizedPerEntry_0
+#plasSubfolder=ESPRESSOOptimizedPerEntry_1
+plasSubfolder=ESPRESSOOptimizedPerEntry_2
 
 printf "CREATE FOLDERS\n\n"
 python3 ./folderCreation.py ${baseFolder} ${modelName} ${plasSubfolder}
