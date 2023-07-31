@@ -23,9 +23,3 @@ if __name__ == "__main__":
                     fmt='%i',
                     newline='\r\n')
         print(f'{outputFolder}/{neuron} created successfully')
-
-        # with open(f'{outputFolder}/{neuron}', 'w') as f:
-        #     for index, row in df.iterrows():
-        #         f.write(''.join(row.to_string(header=False, index=False).replace('\n', '')))
-        #         f.write('\n')
-        #     print(f'{outputFolder}/{neuron} created successfully')
