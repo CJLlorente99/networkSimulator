@@ -1,8 +1,14 @@
-baseFolder=/media/carlosl/CHAR/data
-modelName=eeb/eeb_prunedBT8_100ep_100npl
+baseFolder=/media/famllocor/CHAR/data
+modelName=bnn/bnn_prunedBT8_100ep_4096npl
+neuronsPerLayer=4096
 plasSubfolder=ESPRESSO
 #plasSubfolder=ESPRESSOOptimizedPerClass
-#plasSubfolder=ESPRESSOOptimizedPerEntry
+#plasSubfolder=ESPRESSOOptimizedPerClass_0
+#plasSubfolder=ESPRESSOOptimizedPerClass_1
+#plasSubfolder=ESPRESSOOptimizedPerClass_2
+#plasSubfolder=ESPRESSOOptimizedPerEntry_0
+#plasSubfolder=ESPRESSOOptimizedPerEntry_1
+#plasSubfolder=ESPRESSOOptimizedPerEntry_2
 
 printf "CREATE FOLDERS\n\n"
 python3 ./folderCreation.py ${baseFolder} ${modelName} ${plasSubfolder}
@@ -22,7 +28,7 @@ printf "Creating input files for pruned neurons\n\n"
 python3 ./inputCreationForPrunedNeurons.py $baseFolder/inputs/${modelName}/trainlayer1.csv $baseFolder/savedModels/${modelName}_prunedInfol1.csv $baseFolder/auxFolder
 
 printf "Simulating outputs train\n\n"
-./networkSimulatorAigerPruned $baseFolder/aiger/$modelName/$plasSubfolder/layer2 $baseFolder/auxFolder $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/trainlayer2
+./networkSimulatorAigerPruned $baseFolder/aiger/$modelName/$plasSubfolder/layer2 $baseFolder/auxFolder $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/trainlayer2 $neuronsPerLayer
 
 printf "Joining outputs for next layer inputs\n\n"
 ./createInputsFromSimulated $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/trainlayer2 $baseFolder/inputSimulated/$modelName/$plasSubfolder/trainlayer2
@@ -33,7 +39,7 @@ printf "Creating input files for pruned neurons\n\n"
 python3 ./inputCreationForPrunedNeurons.py $baseFolder/inputs/${modelName}/testlayer1.csv $baseFolder/savedModels/${modelName}_prunedInfol1.csv $baseFolder/auxFolder
 
 printf "Simulating outputs test\n\n"
-./networkSimulatorAigerPruned $baseFolder/aiger/$modelName/$plasSubfolder/layer2 $baseFolder/auxFolder $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/testlayer2
+./networkSimulatorAigerPruned $baseFolder/aiger/$modelName/$plasSubfolder/layer2 $baseFolder/auxFolder $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/testlayer2 $neuronsPerLayer
 
 printf "Joining outputs for next layer inputs\n\n"
 ./createInputsFromSimulated $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/testlayer2 $baseFolder/inputSimulated/$modelName/$plasSubfolder/testlayer2
@@ -55,7 +61,7 @@ printf "Creating input files for pruned neurons\n\n"
 python3 ./inputCreationForPrunedNeurons.py $baseFolder/inputSimulated/$modelName/$plasSubfolder/trainlayer2 $baseFolder/savedModels/${modelName}_prunedInfol2.csv $baseFolder/auxFolder
  
 printf "Simulating outputs train\n\n"
-./networkSimulatorAigerPruned $baseFolder/aiger/$modelName/$plasSubfolder/layer3 $baseFolder/auxFolder $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/trainlayer3
+./networkSimulatorAigerPruned $baseFolder/aiger/$modelName/$plasSubfolder/layer3 $baseFolder/auxFolder $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/trainlayer3 $neuronsPerLayer
 
 printf "Joining outputs for next layer inputs\n\n"
 ./createInputsFromSimulated $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/trainlayer3 $baseFolder/inputSimulated/$modelName/$plasSubfolder/trainlayer3
@@ -66,7 +72,7 @@ printf "Creating input files for pruned neurons\n\n"
 python3 ./inputCreationForPrunedNeurons.py $baseFolder/inputSimulated/$modelName/$plasSubfolder/testlayer2 $baseFolder/savedModels/${modelName}_prunedInfol2.csv $baseFolder/auxFolder
 
 printf "Simulating outputs train\n\n"
-./networkSimulatorAigerPruned $baseFolder/aiger/$modelName/$plasSubfolder/layer3 $baseFolder/auxFolder $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/testlayer3
+./networkSimulatorAigerPruned $baseFolder/aiger/$modelName/$plasSubfolder/layer3 $baseFolder/auxFolder $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/testlayer3 $neuronsPerLayer
 
 printf "Joining outputs for next layer inputs\n\n"
 ./createInputsFromSimulated $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/testlayer3 $baseFolder/inputSimulated/$modelName/$plasSubfolder/testlayer3
@@ -88,7 +94,7 @@ printf "Creating input files for pruned neurons\n\n"
 python3 ./inputCreationForPrunedNeurons.py $baseFolder/inputSimulated/$modelName/$plasSubfolder/trainlayer3 $baseFolder/savedModels/${modelName}_prunedInfol3.csv $baseFolder/auxFolder
  
 printf "Simulating outputs train\n\n"
-./networkSimulatorAigerPruned $baseFolder/aiger/$modelName/$plasSubfolder/layer4 $baseFolder/auxFolder $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/trainlayer4
+./networkSimulatorAigerPruned $baseFolder/aiger/$modelName/$plasSubfolder/layer4 $baseFolder/auxFolder $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/trainlayer4 $neuronsPerLayer
 
 printf "Joining outputs for next layer inputs\n\n"
 ./createInputsFromSimulated $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/trainlayer4 $baseFolder/inputSimulated/$modelName/$plasSubfolder/trainlayer4
@@ -99,7 +105,7 @@ printf "Creating input files for pruned neurons\n\n"
 python3 ./inputCreationForPrunedNeurons.py $baseFolder/inputSimulated/$modelName/$plasSubfolder/testlayer3 $baseFolder/savedModels/${modelName}_prunedInfol3.csv $baseFolder/auxFolder
 
 printf "Simulating outputs train\n\n"
-./networkSimulatorAigerPruned $baseFolder/aiger/$modelName/$plasSubfolder/layer4 $baseFolder/auxFolder $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/testlayer4
+./networkSimulatorAigerPruned $baseFolder/aiger/$modelName/$plasSubfolder/layer4 $baseFolder/auxFolder $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/testlayer4 $neuronsPerLayer
 
 printf "Joining outputs for next layer inputs\n\n"
 ./createInputsFromSimulated $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/testlayer4 $baseFolder/inputSimulated/$modelName/$plasSubfolder/testlayer4

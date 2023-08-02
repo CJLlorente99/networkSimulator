@@ -16,28 +16,17 @@ int main(int argc, char** argv){
     char* aigerFolder = argv[1];
     char* inputFolder = argv[2];
     char* outputFolder = argv[3];
-    int neuronsPerLayer = 4096;
+    int neuronsPerLayer = atoi(argv[4]);
 
     // Loop over all the files in the aiger folder
     DIR *d;
     char aigerFilename[1024];
     char outputFilename[1024];
-    struct dirent *dir; 
-    for (int i; i < neuronsPerLayer; i++){
-        sprintf(aigerFilename, "%s/%s%04d", aigerFolder, "N", i);
-        sprintf(outputFilename, "%s/%s", outputFolder, strremove(dir->d_name, ".aig"));
+    for (int i = 0; i < neuronsPerLayer; i++){
+        sprintf(aigerFilename, "%s/N%04d.aig", aigerFolder, i);
+        sprintf(outputFilename, "%s/N%04d", outputFolder, i);
 
-        printf("\nSimulating %s\n", dir->d_name);
-
-        // Init aiger library
-        aiger* aig = aiger_init();
-
-        // Read from input aiger file
-        FILE* aigerFile = fopen(aigerFilename, "r");
-        if ( aiger_read_from_file(aig, aigerFile) ){
-            printf("Error reading from file\n");
-            return 1;
-        }
+        printf("\nSimulating N%04d\n", i);
 
         // Prepare to redirect terminal output to a file
         int out = open(outputFilename, O_RDWR|O_CREAT|O_APPEND, 0600);
@@ -50,9 +39,9 @@ int main(int argc, char** argv){
             return 1;                
 
         // Simulate all inputs
-        char command[1024];
+        char command[4096];
         char inputFilename[1024];
-        sprintf(inputFilename, "%s/%s", inputFolder, strremove(dir->d_name, ".aig"));
+        sprintf(inputFilename, "%s/N%04d", inputFolder, i);
         sprintf(command, "./include/aiger/aigsim %s %s", aigerFilename, inputFilename);
         system(command);
 
