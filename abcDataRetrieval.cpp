@@ -50,12 +50,8 @@ int main(int argc, char** argv){
     // Open the output file
     fstream outputFileAnd;
     fstream outputFileLevel;
-    string outputFilenameAnd;
-    string outputFilenameLevel;
-    sprintf(outputFilenameAnd, "aigerAndStats.csv");
-    sprintf(outputFilenameLevel, "aigerLevelStats.csv");
-    outputFileAnd.open(outputFilenameAnd, ios::app);
-    outputFileLevel.open(outputFilenameLevel, ios::app);
+    outputFileAnd.open("aigerAndStats.csv", ios::app);
+    outputFileLevel.open("aigerLevelStats.csv", ios::app);
 
     // Iterate through all the PLA files
     vector<int> andInfo;
