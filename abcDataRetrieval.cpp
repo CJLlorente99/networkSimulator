@@ -129,11 +129,11 @@ int main(int argc, char** argv){
 
             cout.rdbuf(oldbuf);
             cout << ss.str();
-            printf("nAnd = %d nLevels = %d\n", nAnd, nLevels);
+            // printf("nAnd = %d nLevels = %d\n", nAnd, nLevels);
 
             // Append the figures to a new line in the output file
-            outputFileAnd << "," << nAnd;
-            outputFileLevel << "," << nLevels;
+            // outputFileAnd << "," << nAnd;
+            // outputFileLevel << "," << nLevels;
         }
         outputFileAnd << endl;
         outputFileLevel << endl;
