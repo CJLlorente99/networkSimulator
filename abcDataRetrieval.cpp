@@ -39,20 +39,9 @@ int main(int argc, char** argv){
     Abc_Start();
     pAbc = Abc_FrameGetGlobalFrame();
 
-    // Load aliases file
-    sprintf(command, "source abc.rc");
-    cout << command << endl;
-    if ( Cmd_CommandExecute(pAbc, command) ) {
-        fprintf(stdout, "Error loading alias file %s\n", command);
-        return 1;
-    }
-
     // Iterate through all the PLA files
-    vector<int> andInfo;
-    vector<int> levelInfo;
     int i = 0;
     for(const auto& aigFolder : aigerSubfolders){
-        printf("Folder %s\n", aigFolder.c_str());
         /* List all the AIGER files in the folder */
         vector<string> aigerFiles;
         for(const auto& entry : std::experimental::filesystem::directory_iterator(aigFolder)){
@@ -61,17 +50,9 @@ int main(int argc, char** argv){
             }
         }
 
-        // Open the output file
-        fstream outputFile;
-        char outputFilename[1024];
-        sprintf(outputFilename, "%s/aigerStats.txt", aigFolder.c_str());
-
-        outputFile.open(outputFilename, ios::app);
-
         vector<string> results;
         for (const auto& aigFile : aigerFiles){
             const char* filename = aigFile.c_str();
-            printf("File %s\n", filename);
 
             // Read the AIG file
             sprintf(command, "read_aiger %s", filename);
@@ -81,10 +62,6 @@ int main(int argc, char** argv){
             return 1;
             }
 
-            // Get result
-            stringstream ss;
-            streambuf* oldbuf = cout.rdbuf(ss.rdbuf());
-
             // Print stats
             sprintf(command, "print_stats");
             // cout << command << endl;
@@ -92,13 +69,6 @@ int main(int argc, char** argv){
                 fprintf(stdout, "Error printintg stats %s\n", command);
                 return 1;
             }
-
-            results.push_back(ss.str());
-            cout.rdbuf(oldbuf);
-        }
-
-        for (const string& res : results) {
-            outputFile << res << endl;
         }
     }
     // End framework
