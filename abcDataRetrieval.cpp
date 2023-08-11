@@ -55,13 +55,13 @@ int main(int argc, char** argv){
         // Open the output file
         fstream outputFileAnd;
         fstream outputFileLevel;
-        char outputFileAnd[1024];
-        sprintf(outputFileAnd, "%s/aigerAndStats.csv", aigFolder.c_str());
-        char outputFileAnd[1024];
-        sprintf(outputFileLevel, "%s/aigerLevelStats.csv", aigFolder.c_str());
+        char outputFilenameAnd[1024];
+        ssprintf(outputFilenameAnd, "%s/aigerAndStats.csv", aigFolder.c_str());
+        char outputFilenameLevel[1024];
+        ssprintf(outputFilenameLevel, "%s/aigerLevelStats.csv", aigFolder.c_str());
 
-        outputFileAnd.open(outputFileAnd, ios::app);
-        outputFileLevel.open(outputFileLevel, ios::app);
+        outputFileAnd.open(outputFilenameAnd, ios::app);
+        outputFileLevel.open(outputFilenameLevel, ios::app);
 
         printf("Folder %s\n", aigFolder.c_str());
         outputFileAnd << aigFolder;
