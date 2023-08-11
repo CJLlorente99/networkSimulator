@@ -86,6 +86,10 @@ int main(int argc, char** argv){
             return 1;
             }
 
+            // Get result
+            stringstream ss;
+            streambuf* oldbuf = cout.rdbuf(ss.rdbuf());
+
             // Print stats
             sprintf(command, "print_stats");
             // cout << command << endl;
@@ -94,42 +98,37 @@ int main(int argc, char** argv){
                 return 1;
             }
 
-            // Get result
-            string line;
-            stringstream ss;
-            getline(cin, line);
-            printf("%s\n", line.c_str());
-            ss << line;
+            // int nInput;
+            // int nOutput;
+            // int nLat;
+            // int nAnd;
+            // int nLevels;
 
-            int nInput;
-            int nOutput;
-            int nLat;
-            int nAnd;
-            int nLevels;
+            // string temp;
+            // int found;
+            // int count = 0;
+            // while (!ss.eof()) {
+            //     ss >> temp;
 
-            string temp;
-            int found;
-            int count = 0;
-            while (!ss.eof()) {
-                ss >> temp;
+            //     if (stringstream(temp) >> found) {
+            //         if (count == 0) {
+            //             nInput << found;
+            //         } else if (count == 1) {
+            //             nOutput << found;
+            //         } else if (count == 2) {
+            //             nLat << found;
+            //         } else if (count == 3) {
+            //             nAnd << found;
+            //         } else if (count == 4) {
+            //             nLevels << found;
+            //         }
+            //         count++;
+            //     }
+            //     temp = "";
+            // }
 
-                if (stringstream(temp) >> found) {
-                    if (count == 0) {
-                        nInput << found;
-                    } else if (count == 1) {
-                        nOutput << found;
-                    } else if (count == 2) {
-                        nLat << found;
-                    } else if (count == 3) {
-                        nAnd << found;
-                    } else if (count == 4) {
-                        nLevels << found;
-                    }
-                    count++;
-                }
-                temp = "";
-            }
-
+            cout.rdbuf(oldbuf);
+            cout << ss.str();
             printf("nAnd = %d nLevels = %d\n", nAnd, nLevels);
 
             // Append the figures to a new line in the output file
