@@ -27,7 +27,6 @@ int main(int argc, char** argv){
     vector<string> aigerSubfolders;
     for(const auto& entry : std::experimental::filesystem::directory_iterator(modelAigerFolder)){
         if(std::experimental::filesystem::is_directory(entry)){
-            cout << entry.path().string().c_str() << '\n';
             aigerSubfolders.push_back(entry.path().string());
         }
     }
@@ -48,21 +47,26 @@ int main(int argc, char** argv){
         return 1;
     }
 
-    // Open the output file
-    fstream outputFileAnd;
-    fstream outputFileLevel;
-    outputFileAnd.open("aigerAndStats.csv", ios::app);
-    outputFileLevel.open("aigerLevelStats.csv", ios::app);
-
     // Iterate through all the PLA files
     vector<int> andInfo;
     vector<int> levelInfo;
     int i = 0;
     for(const auto& aigFolder : aigerSubfolders){
+        // Open the output file
+        fstream outputFileAnd;
+        fstream outputFileLevel;
+        char outputFileAnd[1024];
+        sprintf(outputFileAnd, "%s/aigerAndStats.csv", aigFolder.c_str());
+        char outputFileAnd[1024];
+        sprintf(outputFileLevel, "%s/aigerLevelStats.csv", aigFolder.c_str());
+
+        outputFileAnd.open(outputFileAnd, ios::app);
+        outputFileLevel.open(outputFileLevel, ios::app);
+
         printf("Folder %s\n", aigFolder.c_str());
         outputFileAnd << aigFolder;
         outputFileLevel << aigFolder;
-        for (const auto& aigFile : std::experimental::filesystem::directory_iterator(aigFolder)){
+        for (const auto& aigFile : std::experimental::filesystem::directory_iterator(aigFolder.c_str())){
             const char* filename = aigFile.path().string().c_str();
             printf("File %s\n", filename);
 
