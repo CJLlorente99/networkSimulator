@@ -1,9 +1,9 @@
 baseFolder=/media/carlosl/CHAR/data
 modelName=bnn/bnn_prunedBT6_100ep_4096npl
 neuronPerLayer=4096
-plasSubfolder=ESPRESSO
+#plasSubfolder=ESPRESSO
 ##plasSubfolder=ESPRESSOOptimizedPerClass
-#plasSubfolder=ESPRESSOOptimizedPerClass_0
+plasSubfolder=ESPRESSOOptimizedPerClass_0
 #plasSubfolder=ESPRESSOOptimizedPerClass_1
 #plasSubfolder=ESPRESSOOptimizedPerClass_2
 #plasSubfolder=ESPRESSOOptimizedPerEntry_0

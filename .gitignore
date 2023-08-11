@@ -1,6 +1,7 @@
 data/*
 main
 example
+abcDataRetrieval
 abcSynthesis
 createInputsFromSimulated
 networkSimulatorAiger
