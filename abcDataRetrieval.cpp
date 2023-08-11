@@ -28,7 +28,7 @@ int main(int argc, char** argv){
     for(const auto& entry : std::experimental::filesystem::directory_iterator(modelAigerFolder)){
         if(std::experimental::filesystem::is_directory(entry)){
             cout << entry << '\n';
-            aigerSubfolders.push_back(entry);
+            aigerSubfolders.push_back(entry.path().string());
         }
     }
 
