@@ -27,6 +27,7 @@ int main(int argc, char** argv){
     vector<string> aigerSubfolders;
     for(const auto& entry : std::experimental::filesystem::directory_iterator(modelAigerFolder)){
         if(std::experimental::filesystem::is_directory(entry)){
+            printf("%s\n", entry.path().string());
             aigerSubfolders.push_back(entry.path().string());
         }
     }
@@ -58,10 +59,12 @@ int main(int argc, char** argv){
     vector<int> levelInfo;
     int i = 0;
     for(const auto& aigFolder : aigerSubfolders){
+        printf("*Folder %s\n", aigFolder);
         outputFileAnd << aigFolder;
         outputFileLevel << aigFolder;
         for (const auto& aigFile : std::experimental::filesystem::directory_iterator(aigFolder)){
             const char* filename = aigFile.path().string().c_str();
+            printf("*File %s\n", filename);
 
             // Read the AIG file
             sprintf(command, "read_aiger %s", filename);
