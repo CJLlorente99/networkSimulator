@@ -57,7 +57,6 @@ int main(int argc, char** argv){
         vector<string> aigerFiles;
         for(const auto& entry : std::experimental::filesystem::directory_iterator(aigFolder)){
             if(std::experimental::filesystem::is_regular_file(entry)){
-                printf("File %s\n", entry.path().string().c_str());
                 aigerFiles.push_back(entry.path().string());
             }
         }
@@ -81,7 +80,7 @@ int main(int argc, char** argv){
 
             // Read the AIG file
             sprintf(command, "read_aiger %s", filename);
-            cout << command << endl;
+            // cout << command << endl;
             if ( Cmd_CommandExecute(pAbc, command) ) {
             fprintf(stdout, "Error reading AIGER file %s\n", command);
             return 1;
@@ -89,7 +88,7 @@ int main(int argc, char** argv){
 
             // Print stats
             sprintf(command, "print_stats");
-            cout << command << endl;
+            // cout << command << endl;
             if ( Cmd_CommandExecute(pAbc, command) ) {
                 fprintf(stdout, "Error printintg stats %s\n", command);
                 return 1;
@@ -99,6 +98,7 @@ int main(int argc, char** argv){
             string line;
             stringstream ss;
             getline(cin, line);
+            printf("%s\n", line.c_str());
             ss << line;
 
             int nInput;
