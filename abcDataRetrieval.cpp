@@ -9,7 +9,7 @@
 #include <iostream>
 #include <experimental/filesystem>
 #include <string>
-#include <cstdio>
+#include <sstream>
 #include <vector>
 #include <string.h>
 #include <stdio.h>
@@ -84,12 +84,38 @@ int main(int argc, char** argv){
 
             // Get result
             string line;
+            stringstream ss;
             getline(cin, line);
+            ss << str;
 
+            int nInput;
+            int nOutput;
+            int nLat;
             int nAnd;
             int nLevels;
-            // Use sscanf to get the number of AND and levels
-            sscanf(line, "and = %d  lev = %d", &nAnd, &nLevels);
+
+            string temp;
+            int count = 0;
+            while (!ss.eof()) {
+                ss >> temp;
+
+                if (stringstream(temp) >> found) {
+                    if (count == 0) {
+                        nInput << found;
+                    } else if (count == 1) {
+                        nOutput << found;
+                    } else if (count == 2) {
+                        nLat << found;
+                    } else if (count == 3) {
+                        nAnd << found;
+                    } else if (count == 4) {
+                        nLevels << found;
+                    }
+                    count++;
+                }
+                temp = "";
+            }
+
             printf("nAnd = %d nLevels = %d\n", nAnd, nLevels);
 
             // Append the figures to a new line in the output file
