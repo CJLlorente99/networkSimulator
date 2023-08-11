@@ -40,7 +40,7 @@ int main(int argc, char** argv){
             return 1;                
 
         // Simulate all inputs
-        char command[1024];
+        char command[4096];
         char inputFilename[1024];
         sprintf(inputFilename, "%s/N%04d", inputFolder, i);
         sprintf(command, "./include/aiger/aigsim %s %s", aigerFilename, inputFilename);

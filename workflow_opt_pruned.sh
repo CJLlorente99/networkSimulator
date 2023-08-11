@@ -2,6 +2,7 @@ baseFolder=/media/carlosl/CHAR/data
 modelName=bnn/bnn_prunedBT8_100ep_4096npl
 neuronPerLayer=4096
 plasSubfolder=ABC
+
 #plasSubfolder=ABCOptimizedPerClass
 #plasSubfolder=ABCOptimizedPerEntry
 
