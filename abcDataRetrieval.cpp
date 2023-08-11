@@ -66,7 +66,7 @@ int main(int argc, char** argv){
         printf("Folder %s\n", aigFolder.c_str());
         outputFileAnd << aigFolder;
         outputFileLevel << aigFolder;
-        for (const auto& aigFile : std::experimental::filesystem::directory_iterator(aigFolder.c_str())){
+        for (const auto& aigFile : std::experimental::filesystem::directory_iterator(aigFolder)){
             const char* filename = aigFile.path().string().c_str();
             printf("File %s\n", filename);
 
