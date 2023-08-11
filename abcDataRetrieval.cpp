@@ -10,6 +10,7 @@
 #include <experimental/filesystem>
 #include <string>
 #include <sstream>
+#include <fstream>
 #include <vector>
 #include <string.h>
 #include <stdio.h>
@@ -49,8 +50,8 @@ int main(int argc, char** argv){
     // Open the output file
     fstream outputFileAnd;
     fstream outputFileLevel;
-    string outputFilenameAnd:
-    string outputFilenameLevel:
+    string outputFilenameAnd;
+    string outputFilenameLevel;
     sprintf(outputFilenameAnd, "aigerAndStats.csv");
     sprintf(outputFilenameLevel, "aigerLevelStats.csv");
     outputFileAnd.open(outputFilenameAnd, ios::app);
@@ -61,8 +62,8 @@ int main(int argc, char** argv){
     vector<int> levelInfo;
     int i = 0;
     for(const auto& aigFolder : aigerSubfolders){
-        outputFileAnd << aigFolder.path().string();
-        outputFileLevel << aigFolder.path().string();
+        outputFileAnd << aigFolder;
+        outputFileLevel << aigFolder;
         for (const auto& aigFile : std::experimental::filesystem::directory_iterator(aigFolder)){
             const char* filename = aigFile.path().string().c_str();
 
@@ -86,7 +87,7 @@ int main(int argc, char** argv){
             string line;
             stringstream ss;
             getline(cin, line);
-            ss << str;
+            ss << line;
 
             int nInput;
             int nOutput;
@@ -95,6 +96,7 @@ int main(int argc, char** argv){
             int nLevels;
 
             string temp;
+            int found;
             int count = 0;
             while (!ss.eof()) {
                 ss >> temp;
