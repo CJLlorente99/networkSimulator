@@ -98,7 +98,7 @@ int main(int argc, char** argv){
             string line;
             stringstream ss;
             getline(cin, line);
-            printf("%s\n", line.c_str());
+            printf("Output %s\n", line.c_str());
             ss << line;
 
             int nInput;
