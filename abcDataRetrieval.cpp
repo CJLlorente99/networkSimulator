@@ -9,6 +9,7 @@
 #include <iostream>
 #include <experimental/filesystem>
 #include <string>
+#include <cstdio>
 #include <vector>
 #include <string.h>
 #include <stdio.h>
@@ -45,11 +46,23 @@ int main(int argc, char** argv){
         return 1;
     }
 
+    // Open the output file
+    fstream outputFileAnd;
+    fstream outputFileLevel;
+    string outputFilenameAnd:
+    string outputFilenameLevel:
+    sprintf(outputFilenameAnd, "aigerAndStats.csv");
+    sprintf(outputFilenameLevel, "aigerLevelStats.csv");
+    outputFileAnd.open(outputFilenameAnd, ios::app);
+    outputFileLevel.open(outputFilenameLevel, ios::app);
+
     // Iterate through all the PLA files
     vector<int> andInfo;
     vector<int> levelInfo;
     int i = 0;
     for(const auto& aigFolder : aigerSubfolders){
+        outputFileAnd << aigFolder.path().string();
+        outputFileLevel << aigFolder.path().string();
         for (const auto& aigFile : std::experimental::filesystem::directory_iterator(aigFolder)){
             const char* filename = aigFile.path().string().c_str();
 
@@ -72,7 +85,19 @@ int main(int argc, char** argv){
             // Get result
             string line;
             getline(cin, line);
+
+            int nAnd;
+            int nLevels;
+            // Use sscanf to get the number of AND and levels
+            sscanf(line, "and = %d  lev = %d", &nAnd, &nLevels);
+            printf("nAnd = %d nLevels = %d\n", nAnd, nLevels);
+
+            // Append the figures to a new line in the output file
+            outputFileAnd << "," << nAnd;
+            outputFileLevel << "," << nLevels;
         }
+        outputFileAnd << endl;
+        outputFileLevel << endl;
     }
     // End framework
     Abc_Stop();
