@@ -52,6 +52,16 @@ int main(int argc, char** argv){
     vector<int> levelInfo;
     int i = 0;
     for(const auto& aigFolder : aigerSubfolders){
+        printf("Folder %s\n", aigFolder.c_str());
+        /* List all the AIGER files in the folder */
+        vector<string> aigerFiles;
+        for(const auto& entry : std::experimental::filesystem::directory_iterator(aigFolder)){
+            if(std::experimental::filesystem::is_regular_file(entry)){
+                printf("File %s\n", entry.path().string().c_str());
+                aigerFiles.push_back(entry.path().string());
+            }
+        }
+
         // Open the output file
         fstream outputFileAnd;
         fstream outputFileLevel;
@@ -63,11 +73,10 @@ int main(int argc, char** argv){
         outputFileAnd.open(outputFilenameAnd, ios::app);
         outputFileLevel.open(outputFilenameLevel, ios::app);
 
-        printf("Folder %s\n", aigFolder.c_str());
         outputFileAnd << aigFolder;
         outputFileLevel << aigFolder;
-        for (const auto& aigFile : std::experimental::filesystem::directory_iterator(aigFolder)){
-            const char* filename = aigFile.path().string().c_str();
+        for (const auto& aigFile : aigerFiles){
+            const char* filename = aigFile.c_str();
             printf("File %s\n", filename);
 
             // Read the AIG file
