@@ -62,18 +62,13 @@ int main(int argc, char** argv){
         }
 
         // Open the output file
-        fstream outputFileAnd;
-        fstream outputFileLevel;
-        char outputFilenameAnd[1024];
-        sprintf(outputFilenameAnd, "%s/aigerAndStats.csv", aigFolder.c_str());
-        char outputFilenameLevel[1024];
-        sprintf(outputFilenameLevel, "%s/aigerLevelStats.csv", aigFolder.c_str());
+        fstream outputFile;
+        char outputFilename[1024];
+        sprintf(outputFilename, "%s/aigerStats.txt", aigFolder.c_str());
 
-        outputFileAnd.open(outputFilenameAnd, ios::app);
-        outputFileLevel.open(outputFilenameLevel, ios::app);
+        outputFile.open(outputFilename, ios::app);
 
-        outputFileAnd << aigFolder;
-        outputFileLevel << aigFolder;
+        vector<string> results;
         for (const auto& aigFile : aigerFiles){
             const char* filename = aigFile.c_str();
             printf("File %s\n", filename);
@@ -98,44 +93,13 @@ int main(int argc, char** argv){
                 return 1;
             }
 
-            int nInput;
-            int nOutput;
-            int nLat;
-            int nAnd;
-            int nLevels;
-
-            string temp;
-            int found;
-            int count = 0;
-            while (!ss.eof()) {
-                ss >> temp;
-
-                if (stringstream(temp) >> found) {
-                    if (count == 0) {
-                        nInput << found;
-                    } else if (count == 1) {
-                        nOutput << found;
-                    } else if (count == 2) {
-                        nLat << found;
-                    } else if (count == 3) {
-                        nAnd << found;
-                    } else if (count == 4) {
-                        nLevels << found;
-                    }
-                    count++;
-                }
-                temp = "";
-            }
-
+            results.push_back(ss.str());
             cout.rdbuf(oldbuf);
-            printf("nAnd = %d nLevels = %d\n", nAnd, nLevels);
-
-            // Append the figures to a new line in the output file
-            outputFileAnd << "," << nAnd;
-            outputFileLevel << "," << nLevels;
         }
-        outputFileAnd << endl;
-        outputFileLevel << endl;
+
+        for (const string& res : results) {
+            outputFile << res << endl;
+        }
     }
     // End framework
     Abc_Stop();
