@@ -23,11 +23,12 @@ int main(int argc, char** argv){
     char aigerFilename[1024];
     char outputFilename[1024];
 
-    for (int i=0; i < neuronsPerLayer; i++){
+    int i = 0;
+    for (i; i < neuronsPerLayer; i++){
         sprintf(aigerFilename, "%s/N%04d.aig", aigerFolder, i);
         sprintf(outputFilename, "%s/N%04d", outputFolder, i);
 
-        printf("\nSimulating %s\n", aigerFilename);
+        // printf("\nSimulating %s\n", aigerFilename);
 
         // Prepare to redirect terminal output to a file
         int out = open(outputFilename, O_RDWR|O_CREAT|O_APPEND, 0600);
@@ -57,6 +58,7 @@ int main(int argc, char** argv){
         // Delete the AIG file
 //                remove(aigerFilename);
     }
+    printf("\nSimulated [%d/%d]\n", i, neuronsPerLayer);
 
     return 0;
 }

@@ -1,10 +1,20 @@
 baseFolder=/media/carlosl/CHAR/data
-modelName=bnn/bnn_prunedBT8_100ep_4096npl
+modelName=bnn/bnn_prunedBT6_100ep_4096npl
 neuronPerLayer=4096
-plasSubfolder=ABC
-
+#plasSubfolder=ABC
 #plasSubfolder=ABCOptimizedPerClass
 #plasSubfolder=ABCOptimizedPerEntry
+
+#for plasSubfolder in ABC ABCOptimizedPerClass ABCOptimizedPerEntry
+for modelName in bnn/bnn_prunedBT6_100ep_4096npl bnn/bnn_prunedBT8_100ep_4096npl bnn/bnn_prunedBT10_100ep_4096npl
+do
+
+printf "\n$modelName\n"
+
+for plasSubfolder in ABC
+do
+
+printf "$plasSubfolder\n\n"
 
 printf "CREATE FOLDERS\n\n"
 python3 ./folderCreation.py ${baseFolder} ${modelName} ${plasSubfolder}
@@ -90,3 +100,6 @@ printf "Simulating outputs train\n\n"
 
 printf "Joining outputs for next layer inputs\n\n"
 ./createInputsFromSimulated $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/testlayer4 $baseFolder/inputSimulated/$modelName/$plasSubfolder/testlayer4
+
+done
+done

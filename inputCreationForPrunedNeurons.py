@@ -19,7 +19,9 @@ if __name__ == "__main__":
 
     dfPrune = pd.read_csv(pruneFilename)
     print(f'{pruneFilename} read')
-
+    
+    totalNeurons = len(dfPrune.columns)
+    count = 0
     for neuron in dfPrune.columns:
         df = dfInputs.drop(dfInputs.columns[dfPrune[neuron]], axis=1)
         dfNp = df.to_numpy()
@@ -29,5 +31,8 @@ if __name__ == "__main__":
                     delimiter='',
                     fmt='%i',
                     newline='\n')
-        print(f'{outputFolder}/{neuron} created successfully')
+        #if (count % 100) == 0:
+            #print(f'{count:4d}/{totalNeurons:04d} created successfully')
+        count += 1
+    print(f'{count:4d}/{totalNeurons:04d} created successfully')
 

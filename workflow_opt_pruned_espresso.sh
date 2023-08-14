@@ -3,12 +3,22 @@ modelName=bnn/bnn_prunedBT6_100ep_4096npl
 neuronPerLayer=4096
 #plasSubfolder=ESPRESSO
 ##plasSubfolder=ESPRESSOOptimizedPerClass
-plasSubfolder=ESPRESSOOptimizedPerClass_0
+#plasSubfolder=ESPRESSOOptimizedPerClass_0
 #plasSubfolder=ESPRESSOOptimizedPerClass_1
 #plasSubfolder=ESPRESSOOptimizedPerClass_2
 #plasSubfolder=ESPRESSOOptimizedPerEntry_0
 #plasSubfolder=ESPRESSOOptimizedPerEntry_1
 #plasSubfolder=ESPRESSOOptimizedPerEntry_2
+
+#for modelName in bnn/bnn_prunedBT6_100ep_4096npl bnn/bnn_prunedBT8_100ep_4096npl bnn/bnn_prunedBT10_100ep_4096npl
+#do
+
+printf "\n$modelName\n"
+
+for plasSubfolder in ESPRESSOOptimizedPerClass_0 ESPRESSOOptimizedPerClass_1 ESPRESSOOptimizedPerClass_2 ESPRESSOOptimizedPerEntry_0 ESPRESSOOptimizedPerEntry_1 ESPRESSOOptimizedPerEntry_2
+do
+
+printf "$plasSubfolder\n\n"
 
 printf "CREATE FOLDERS\n\n"
 python3 ./folderCreation.py ${baseFolder} ${modelName} ${plasSubfolder}
@@ -109,3 +119,5 @@ printf "Simulating outputs train\n\n"
 
 printf "Joining outputs for next layer inputs\n\n"
 ./createInputsFromSimulated $baseFolder/simulatedOutputs/$modelName/$plasSubfolder/testlayer4 $baseFolder/inputSimulated/$modelName/$plasSubfolder/testlayer4
+
+done

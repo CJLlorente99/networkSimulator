@@ -64,7 +64,7 @@ int main(int argc, char** argv){
 
     // Load aliases file
     sprintf(command, "source abc.rc");
-    cout << command << endl;
+    // cout << command << endl;
     if ( Cmd_CommandExecute(pAbc, command) ) {
         fprintf(stdout, "Error loading alias file %s\n", command);
         return 1;
@@ -76,43 +76,27 @@ int main(int argc, char** argv){
         const char* filename = plaFile.c_str();
         // Read the PLA file
         sprintf(command, "read_pla %s", filename);
-        cout << command << endl;
+        // cout << command << endl;
         if ( Cmd_CommandExecute(pAbc, command) ) {
             fprintf(stdout, "Error reading PLA file %s\n", command);
             return 1;
         }
 
         // Print stats
-        sprintf(command, "print_stats");
-        cout << command << endl;
-        if ( Cmd_CommandExecute(pAbc, command) ) {
-            fprintf(stdout, "Error printintg stats %s\n", command);
-            return 1;
-        }
-
-        // Print stats
         if (espresso) {
             sprintf(command, "espresso");
-            cout << command << endl;
+            // cout << command << endl;
             if ( Cmd_CommandExecute(pAbc, command) ) {
                 fprintf(stdout, "Error printintg stats %s\n", command);
                 return 1;
             }
         }
 
-        // Print stats
-        sprintf(command, "print_stats");
-        cout << command << endl;
-        if ( Cmd_CommandExecute(pAbc, command) ) {
-            fprintf(stdout, "Error printintg stats %s\n", command);
-            return 1;
-        }
-
         if (optimize) {
             // Logic minimization step
             // sprintf(command, "resyn");
             sprintf(command, "resyn2");
-            cout << command << endl;
+            // cout << command << endl;
             if ( Cmd_CommandExecute(pAbc, command) ) {
                 fprintf(stdout, "Error minimizing PLA file %s\n", command);
                 return 1;
@@ -120,19 +104,11 @@ int main(int argc, char** argv){
         }else{
             // Structurally hash into AIGs
             sprintf(command, "strash");
-            cout << command << endl;
+            // cout << command << endl;
             if ( Cmd_CommandExecute(pAbc, command) ) {
                 fprintf(stdout, "Error hashing PLA file %s\n", command);
                 return 1;
             }
-        }
-
-        // Print stats
-        sprintf(command, "print_stats");
-        cout << command << endl;
-        if ( Cmd_CommandExecute(pAbc, command) ) {
-            fprintf(stdout, "Error printintg stats %s\n", command);
-            return 1;
         }
 
         // Write the AIG file
@@ -140,17 +116,23 @@ int main(int argc, char** argv){
         unsigned last = plaFile.find(".pla");
         string outFilename = outFolderName + '/' + plaFile.substr(first, last - first) + ".aig";
         sprintf(command, "write_aiger %s", outFilename.c_str());
-        cout << command << endl;
+        // cout << command << endl;
         if ( Cmd_CommandExecute(pAbc, command) ) {
             fprintf(stdout, "Error writing AIG file %s\n", command);
             return 1;
         }
-        string msg = to_string(++i) + " / " + to_string(plaFiles.size()); 
-        cout << msg << endl;
+
+	/*if ( i % 100 == 0 ){
+            string msg = "ABC [" + to_string(i) + " / " + to_string(plaFiles.size()) + "]"; 
+            cout << msg << endl;
+        }*/
+        i++;
 
         // Remove PLA file
 //        remove(filename);
     }
+    string msg = "ABC [" + to_string(i) + " / " + to_string(plaFiles.size()) + "]"; 
+    cout << msg << endl;
     // End framework
     Abc_Stop();
     return 0;

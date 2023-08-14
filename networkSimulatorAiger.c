@@ -53,7 +53,7 @@ int main(int argc, char** argv){
 
                 // Simulate all inputs
                 char command[1024];
-                sprintf(command, "./include/aiger/aigsim %s %s", aigerFilename, inputFilename);
+                sprintf(command, "./include/aiger/aigsim %s %s > logAiger.txt", aigerFilename, inputFilename);
                 system(command);
 
                 // Back to normal terminal output
