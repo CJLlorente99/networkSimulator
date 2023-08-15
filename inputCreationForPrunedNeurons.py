@@ -38,7 +38,7 @@ if __name__ == "__main__":
                 if (count % 100) == 0:
                     print(f'Chunk [{chunkNum}] [{count:4d}/{totalNeurons:04d}] created successfully')
                 count += 1
-                chunkNum += 1
+            chunkNum += 1
             print(f'Chunk [{chunkNum}] [{count:4d}/{totalNeurons:04d}] created successfully')
     else:
         with open(allInputsFile, 'r') as f:
@@ -75,6 +75,6 @@ if __name__ == "__main__":
                     if (count % 100) == 0:
                         print(f'Chunk [{chunkNum}] [{count:4d}/{totalNeurons:04d}] created successfully')
                     count += 1
-                    chunkNum += 1
+                chunkNum += 1
                 print(f'Chunk [{chunkNum}] [{count:4d}/{totalNeurons:04d}] created successfully')
 
