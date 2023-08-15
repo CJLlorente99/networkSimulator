@@ -41,12 +41,12 @@ if __name__ == "__main__":
             chunkNum += 1
             print(f'Chunk [{chunkNum}] [{count:4d}/{totalNeurons:04d}] created successfully')
     else:
-        with open(allInputsFile, 'r') as f:
+        with open(allInputsFile, 'r') as f_inputs:
             chunkNum = 0
             count = 0
             while True:
-                gen = islice(f, 10000)
-                dfInputs = np.genfromtxt(allInputsFile, delimiter=1)
+                gen = islice(f_inputs, 10000)
+                dfInputs = np.genfromtxt(gen, delimiter=1)
                 
                 if dfInputs.shape[0] == 0:
                     break
