@@ -15,6 +15,7 @@ if __name__ == "__main__":
         os.remove(file_path)
 
     if allInputsFile.endswith('.csv'):
+        chunkNum = 0
         for dfInputs in pd.read_csv(allInputsFile, index_col=0, chunksize=10000):
             print(f'{allInputsFile} read. Shape {dfInputs.shape}')
 
@@ -23,7 +24,6 @@ if __name__ == "__main__":
             
             totalNeurons = len(dfPrune.columns)
             count = 0
-            chunkNum = 0
             for neuron in dfPrune.columns:
                 df = dfInputs.drop(dfInputs.columns[dfPrune[neuron]], axis=1)
                 dfNp = df.to_numpy()
@@ -43,7 +43,6 @@ if __name__ == "__main__":
     else:
         with open(allInputsFile, 'r') as f_inputs:
             chunkNum = 0
-            count = 0
             while True:
                 gen = islice(f_inputs, 10000)
                 dfInputs = np.genfromtxt(gen, delimiter=1)
