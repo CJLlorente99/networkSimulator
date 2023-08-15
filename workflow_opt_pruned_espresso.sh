@@ -1,5 +1,5 @@
 baseFolder=/media/carlosl/CHAR/data
-modelName=bnn/bnn_prunedBT6_100ep_4096npl
+modelName=bnn/bnn_prunedBT8_100ep_4096npl
 neuronPerLayer=4096
 #plasSubfolder=ESPRESSO
 ##plasSubfolder=ESPRESSOOptimizedPerClass
@@ -15,7 +15,7 @@ neuronPerLayer=4096
 
 printf "\n$modelName\n"
 
-for plasSubfolder in ESPRESSOOptimizedPerClass_0 ESPRESSOOptimizedPerClass_1 ESPRESSOOptimizedPerClass_2 ESPRESSOOptimizedPerEntry_0 ESPRESSOOptimizedPerEntry_1 ESPRESSOOptimizedPerEntry_2
+for plasSubfolder in ESPRESSO ESPRESSOOptimizedPerClass_0 ESPRESSOOptimizedPerClass_1 ESPRESSOOptimizedPerClass_2 ESPRESSOOptimizedPerEntry_0 ESPRESSOOptimizedPerEntry_1 ESPRESSOOptimizedPerEntry_2
 do
 
 printf "$plasSubfolder\n\n"

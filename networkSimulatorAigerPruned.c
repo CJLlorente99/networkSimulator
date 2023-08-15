@@ -54,6 +54,8 @@ int main(int argc, char** argv){
         dup2(save_out, fileno(stdout));
 
         close(save_out);
+        
+        printf("\nSimulated [%d/%d]\n", i, neuronsPerLayer);
 
         // Delete the AIG file
 //                remove(aigerFilename);
