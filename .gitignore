@@ -1,6 +1,7 @@
 data/*
 main
 example
+abcAppendMap
 abcDataRetrieval
 abcSynthesis
 createInputsFromSimulated

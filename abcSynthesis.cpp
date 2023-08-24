@@ -122,10 +122,10 @@ int main(int argc, char** argv){
             return 1;
         }
 
-	/*if ( i % 100 == 0 ){
+	if( i % 100 == 0 ){
             string msg = "ABC [" + to_string(i) + " / " + to_string(plaFiles.size()) + "]"; 
             cout << msg << endl;
-        }*/
+            }
         i++;
 
         // Remove PLA file
