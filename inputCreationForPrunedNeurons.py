@@ -42,7 +42,6 @@ if __name__ == "__main__":
     else:
         with open(allInputsFile, 'r') as f_inputs:
             chunkNum = 0
-
             while True:
                 gen = islice(f_inputs, chunksize)
                 dfInputs = np.genfromtxt(gen, delimiter=1, dtype=int)
